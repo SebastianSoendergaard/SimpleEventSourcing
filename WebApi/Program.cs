@@ -7,12 +7,14 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 //InmemoryEventStore eventStore = new();
-PostgreSqlEventStore eventStore = new("Server=localhost;Port=9002;User Id=postgres;Password=Passw0rd;Database=simple_event_sourcing;", "event_store");
+
+var postgresConnectionString = "Server=localhost;Port=9002;User Id=postgres;Password=Passw0rd;Database=simple_event_sourcing;";
+PostgreSqlEventStore.CreateIfNotExist(postgresConnectionString, "event_store");
+PostgreSqlEventStore eventStore = new(postgresConnectionString, "event_store");
+
 ProjectionManager projectionManager = new(eventStore);
-UserProjector userProjector = new();
-UserNameProjector userNameProjector = new();
-projectionManager.RegisterLiveProjector(userProjector);
-projectionManager.RegisterLiveProjector(userNameProjector);
+projectionManager.RegisterLiveProjector(new UserProjector());
+projectionManager.RegisterLiveProjector(new UserNameProjector());
 
 builder.Services.AddSingleton<IEventStore>(eventStore);
 builder.Services.AddSingleton(projectionManager);

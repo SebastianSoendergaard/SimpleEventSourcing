@@ -13,7 +13,6 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
     public PostgreSqlEventStore(string connectionString, string eventStoreName)
     {
         _eventStoreName = eventStoreName;
-        CreateIfNotExist(connectionString, _eventStoreName);
 
         _connection = new NpgsqlConnection(connectionString);
         _connection.Open();
