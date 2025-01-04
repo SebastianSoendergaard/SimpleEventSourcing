@@ -4,8 +4,9 @@ public class InmemoryEventStore : IEventStore
 {
     private readonly List<EventEntry> _events = [];
     private readonly object _lock = new();
+    private Func<Task>? _onEventsAppended;
 
-    public Task AppendEvents(Guid streamId, int version, IEnumerable<object> events)
+    public async Task AppendEvents(Guid streamId, int version, IEnumerable<object> events)
     {
         lock (_lock)
         {
@@ -31,7 +32,10 @@ public class InmemoryEventStore : IEventStore
             }
         }
 
-        return Task.CompletedTask;
+        if (_onEventsAppended != null)
+        {
+            await _onEventsAppended.Invoke();
+        }
     }
 
     public Task<long> GetHeadSequenceNumber()
@@ -64,5 +68,10 @@ public class InmemoryEventStore : IEventStore
             .Take(max);
 
         return Task.FromResult(events);
+    }
+
+    public void RegisterForEventsAppendedNotifications(Func<Task> onEventsAppended)
+    {
+        _onEventsAppended += onEventsAppended;
     }
 }

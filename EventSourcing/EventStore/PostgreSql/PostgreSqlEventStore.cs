@@ -9,6 +9,7 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
 {
     private readonly NpgsqlConnection _connection;
     private readonly string _eventStoreName;
+    private Func<Task>? _onEventsAppended;
 
     public PostgreSqlEventStore(string connectionString, string eventStoreName)
     {
@@ -40,6 +41,11 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
                 cmd.Parameters.AddWithValue("eventJson", NpgsqlDbType.Jsonb, eventJson);
 
                 await cmd.ExecuteNonQueryAsync();
+            }
+
+            if (_onEventsAppended != null)
+            {
+                await _onEventsAppended.Invoke();
             }
 
             transaction.Commit();
@@ -251,6 +257,11 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
         {
             throw new EventStoreException("Could not create database table", ex);
         }
+    }
+
+    public void RegisterForEventsAppendedNotifications(Func<Task> onEventsAppended)
+    {
+        _onEventsAppended += onEventsAppended;
     }
 
     public void Dispose()

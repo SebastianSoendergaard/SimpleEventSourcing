@@ -7,5 +7,6 @@
         Task<IEnumerable<EventEntry>> LoadEvents(Guid streamId);
         Task<IEnumerable<EventEntry>> LoadEvents(Guid streamId, long startSequenceNumber, int max);
         Task<IEnumerable<EventEntry>> LoadEvents(long startSequenceNumber, int max);
+        void RegisterForEventsAppendedNotifications(Func<Task> onEventsAppended);
     }
 }

@@ -18,13 +18,13 @@ namespace WebApi.Domain
 
         public async Task Update(IEnumerable<EventEntry> events)
         {
-            _eventTypes ??= GetDomainEventTypes().Select(x => x.FullName ?? "").ToHashSet();
+            _eventTypes ??= GetDomainEventTypes().Select(x => x.AssemblyQualifiedName ?? "").ToHashSet();
 
-            foreach (EventEntry @event in events)
+            foreach (var @event in events)
             {
                 if (_eventTypes.Contains(@event.EventType))
                 {
-                    IDomainEvent domainEvent = @event.Event as IDomainEvent ?? throw new InvalidOperationException($"EventStore event cannot be converted to domain event: {@event.Event.GetType().FullName}");
+                    var domainEvent = @event.Event as IDomainEvent ?? throw new InvalidOperationException($"EventStore event cannot be converted to domain event: {@event.Event.GetType().FullName}");
                     await Mutate(@event.StreamId, @event.Version, @event.Timestamp, domainEvent);
                 }
 

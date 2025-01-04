@@ -18,7 +18,6 @@ namespace WebApi.Domain
         {
             var events = aggregate.UncommitedDomainEvents;
             await _eventStore.AppendEvents(aggregate.Id, aggregate.Version + 1, events);
-            await _projectionManager.UpdateLiveProjections();
             aggregate.ClearDomainEvents();
         }
 
@@ -26,7 +25,6 @@ namespace WebApi.Domain
         {
             var events = aggregate.UncommitedDomainEvents;
             await _eventStore.AppendEvents(aggregate.Id, aggregate.Version + 1, events);
-            await _projectionManager.UpdateLiveProjections();
             aggregate.ClearDomainEvents();
         }
 

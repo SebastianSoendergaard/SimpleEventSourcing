@@ -11,6 +11,7 @@ public class ProjectionManager
     public ProjectionManager(IEventStore eventStore)
     {
         _eventStore = eventStore;
+        _eventStore.RegisterForEventsAppendedNotifications(UpdateLiveProjections);
     }
 
     public void RegisterLiveProjector(IProjector projector)
@@ -47,7 +48,14 @@ public class ProjectionManager
             {
                 const int max = 50; // We need a limit to ensure that one projector does not block them all
                 var events = await _eventStore.LoadEvents(projector.SequenceNumber + 1, max);
-                await projector.Update(events);
+                try
+                {
+                    await projector.Update(events);
+                }
+                catch (Exception)
+                {
+
+                }
 
                 // TODO: Save projector state in database
             }
