@@ -238,7 +238,10 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
         {
             using var connection = new NpgsqlConnection(connectionString);
             connection.Open();
-            var sql = $@"CREATE TABLE IF NOT EXISTS public.{eventStoreTableNames} (
+
+            using var transaction = connection.BeginTransaction();
+
+            var sql1 = $@"CREATE TABLE IF NOT EXISTS public.{eventStoreTableNames} (
                             sequence_number bigserial, 
                             stream_id uuid,
                             version integer,
@@ -248,9 +251,17 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
                             PRIMARY KEY (sequence_number),
                             CONSTRAINT unique_stream_version UNIQUE (stream_id, version)
                         );";
-            using var cmd = new NpgsqlCommand(sql);
-            cmd.Connection = connection;
-            cmd.ExecuteNonQuery();
+            using var cmd1 = new NpgsqlCommand(sql1);
+            cmd1.Connection = connection;
+            cmd1.ExecuteNonQuery();
+
+            var sql2 = $@"CREATE INDEX IF NOT EXISTS index_stream_id ON public.{eventStoreTableNames}(stream_id);";
+            using var cmd2 = new NpgsqlCommand(sql2);
+            cmd2.Connection = connection;
+            cmd2.ExecuteNonQuery();
+
+            transaction.Commit();
+
             connection.Close();
         }
         catch (Exception ex)
