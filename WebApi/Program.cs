@@ -8,8 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 //InmemoryEventStore eventStore = new();
 
-//var filePath = @"c:/temp/eventstore";
-//var eventStore = new FileEventStore(filePath);
+//var directoryPath = @"c:/temp/eventstore";
+//var eventStore = new FileEventStore(directoryPath);
 
 var postgresConnectionString = "Server=localhost;Port=9002;User Id=postgres;Password=Passw0rd;Database=simple_event_sourcing;";
 PostgreSqlEventStore.CreateIfNotExist(postgresConnectionString, "event_store");
