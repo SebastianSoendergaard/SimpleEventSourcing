@@ -3,9 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34525.116
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApi", "WebApi\WebApi.csproj", "{7B042CE5-2655-4E86-9219-4531038B314C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebApi", "WebApi\WebApi.csproj", "{7B042CE5-2655-4E86-9219-4531038B314C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing", "EventSourcing\EventSourcing.csproj", "{C073707F-7EAD-457C-AD3D-4B340B4ACFE0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventSourcing", "EventSourcing\EventSourcing.csproj", "{C073707F-7EAD-457C-AD3D-4B340B4ACFE0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventSourcing.Test", "EventSourcing.Test\EventSourcing.Test.csproj", "{433B329B-6468-43B7-A39B-16C75A19470B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{C073707F-7EAD-457C-AD3D-4B340B4ACFE0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C073707F-7EAD-457C-AD3D-4B340B4ACFE0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C073707F-7EAD-457C-AD3D-4B340B4ACFE0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{433B329B-6468-43B7-A39B-16C75A19470B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{433B329B-6468-43B7-A39B-16C75A19470B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{433B329B-6468-43B7-A39B-16C75A19470B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{433B329B-6468-43B7-A39B-16C75A19470B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

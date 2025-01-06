@@ -1,6 +1,6 @@
 ﻿namespace EventSourcing.EventStore.InMemory;
 
-public class InmemoryEventStore : IEventStore
+public class InMemoryEventStore : IEventStore
 {
     private readonly List<EventEntry> _events = [];
     private readonly object _lock = new();

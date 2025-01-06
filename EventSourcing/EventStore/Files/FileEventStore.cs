@@ -62,7 +62,7 @@ public class FileEventStore : IEventStore
         var head = LoadEventsFromFiles()
             .Select(x => x.SequenceNumber)
             .DefaultIfEmpty(0)
-            .Max() + 1;
+            .Max();
 
         return Task.FromResult(head);
     }

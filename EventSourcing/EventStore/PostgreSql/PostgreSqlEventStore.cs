@@ -249,13 +249,13 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
                             event_type varchar(200),
                             event jsonb,
                             PRIMARY KEY (sequence_number),
-                            CONSTRAINT unique_stream_version UNIQUE (stream_id, version)
+                            CONSTRAINT {eventStoreTableNames}_unique_stream_version UNIQUE (stream_id, version)
                         );";
             using var cmd1 = new NpgsqlCommand(sql1);
             cmd1.Connection = connection;
             cmd1.ExecuteNonQuery();
 
-            var sql2 = $@"CREATE INDEX IF NOT EXISTS index_stream_id ON public.{eventStoreTableNames}(stream_id);";
+            var sql2 = $@"CREATE INDEX IF NOT EXISTS {eventStoreTableNames}_index_stream_id ON public.{eventStoreTableNames}(stream_id);";
             using var cmd2 = new NpgsqlCommand(sql2);
             cmd2.Connection = connection;
             cmd2.ExecuteNonQuery();
