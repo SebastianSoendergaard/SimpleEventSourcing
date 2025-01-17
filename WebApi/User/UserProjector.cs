@@ -7,6 +7,7 @@ public class UserProjector : Projector
     public static Guid ProjectorId = new("74D64DD5-B86B-4B0B-908A-361FC0AAF1D0");
 
     private readonly IDictionary<Guid, UserProjection> _userProjections = new Dictionary<Guid, UserProjection>();
+    private long _sequenceNumber = 0;
 
     protected override Guid GetId()
     {
@@ -20,6 +21,17 @@ public class UserProjector : Projector
             typeof(UserCreated),
             typeof(UserNameChanged)
         ];
+    }
+
+    protected override Task<long> GetSequenceNumber()
+    {
+        return Task.FromResult(_sequenceNumber);
+    }
+
+    protected override Task UpdateComplete(long sequenceNumber)
+    {
+        _sequenceNumber = sequenceNumber;
+        return Task.CompletedTask;
     }
 
     public UserProjection GetProjection(Guid userId)
@@ -43,7 +55,7 @@ public class UserProjector : Projector
 
     public Task UpdateWith(UserNameChanged @event, Guid streamId, int version, DateTimeOffset timestamp)
     {
-        UserProjection userProjection = _userProjections[streamId];
+        var userProjection = _userProjections[streamId];
         userProjection.Name = @event.Name;
         userProjection.Version = version;
         userProjection.LastUpdated = timestamp;

@@ -43,12 +43,12 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
                 await cmd.ExecuteNonQueryAsync();
             }
 
+            transaction.Commit();
+
             if (_onEventsAppended != null)
             {
                 await _onEventsAppended.Invoke();
             }
-
-            transaction.Commit();
         }
         catch (PostgresException ex) when (ex.Message.Contains("unique_stream_version"))
         {

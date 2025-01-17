@@ -15,15 +15,15 @@ public class UserRepository : EventSourcedRepository<UserAggregate>
 
     public UserProjection GetUserProjection(Guid userId)
     {
-        UserProjector projector = _projectionManager.GetProjector<UserProjector>(UserProjector.ProjectorId);
-        UserProjection projection = projector.GetProjection(userId);
+        var projector = _projectionManager.GetProjector<UserProjector>(UserProjector.ProjectorId);
+        var projection = projector.GetProjection(userId);
         return projection;
     }
 
     public IEnumerable<UserNameProjection> GetUserNameProjections()
     {
-        UserNameProjector projector = _projectionManager.GetProjector<UserNameProjector>(UserNameProjector.ProjectorId);
-        IEnumerable<UserNameProjection> projection = projector.GetProjection();
+        var projector = _projectionManager.GetProjector<UserNameProjector>(UserNameProjector.ProjectorId);
+        var projection = projector.GetProjection();
         return projection;
     }
 }

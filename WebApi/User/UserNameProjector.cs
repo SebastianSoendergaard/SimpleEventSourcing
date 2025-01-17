@@ -7,6 +7,7 @@ public class UserNameProjector : Projector
     public static Guid ProjectorId = new("325933F7-883B-4E9F-BBFE-F85A3EE4027B");
 
     private readonly List<UserNameProjection> _projections = [];
+    private long _sequenceNumber = 0;
 
     protected override Guid GetId()
     {
@@ -16,6 +17,17 @@ public class UserNameProjector : Projector
     protected override IEnumerable<Type> GetDomainEventTypes()
     {
         return [typeof(UserNameChanged)];
+    }
+
+    protected override Task<long> GetSequenceNumber()
+    {
+        return Task.FromResult(_sequenceNumber);
+    }
+
+    protected override Task UpdateComplete(long sequenceNumber)
+    {
+        _sequenceNumber = sequenceNumber;
+        return Task.CompletedTask;
     }
 
     public IEnumerable<UserNameProjection> GetProjection()

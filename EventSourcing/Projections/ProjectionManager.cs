@@ -5,35 +5,36 @@ namespace EventSourcing.Projections;
 public class ProjectionManager
 {
     private readonly IEventStore _eventStore;
+    private readonly IProjectorStateStore _projectorStateStore;
     private readonly List<IProjector> _liveProjectors = [];
     private readonly List<IProjector> _eventualProjectors = [];
 
-    public ProjectionManager(IEventStore eventStore)
+    public ProjectionManager(IEventStore eventStore, IProjectorStateStore projectorStateStore)
     {
         _eventStore = eventStore;
+        _projectorStateStore = projectorStateStore;
+
         _eventStore.RegisterForEventsAppendedNotifications(UpdateLiveProjections);
     }
 
     public void RegisterLiveProjector(IProjector projector)
     {
+        _projectorStateStore.UpsertProjector(projector);
         _liveProjectors.Add(projector);
-
-        // TODO: Save projector in database, if it does not exist
     }
 
     public void RegisterEventualProjector(IProjector projector)
     {
+        _projectorStateStore.UpsertProjector(projector);
         _eventualProjectors.Add(projector);
-
-        // TODO: Save projector in database, if it does not exist
     }
 
-    public Task UpdateLiveProjections()
+    private Task UpdateLiveProjections()
     {
         return UpdateProjections(_liveProjectors);
     }
 
-    public Task UpdateEventualProjections()
+    private Task UpdateEventualProjections()
     {
         return UpdateProjections(_eventualProjectors);
     }
@@ -41,25 +42,79 @@ public class ProjectionManager
     private async Task UpdateProjections(IEnumerable<IProjector> projectors)
     {
         var headSequenceNumber = await _eventStore.GetHeadSequenceNumber();
+        var eventCache = new Dictionary<long, IEnumerable<EventEntry>>();
 
         foreach (var projector in projectors)
         {
-            if (projector.SequenceNumber < headSequenceNumber)
+            var currentState = await _projectorStateStore.GetProcessingState(projector);
+
+            try
             {
-                const int max = 50; // We need a limit to ensure that one projector does not block them all
-                var events = await _eventStore.LoadEvents(projector.SequenceNumber + 1, max);
-                try
+                var events = await LoadEvents(projector, headSequenceNumber, eventCache);
+                if (events.Any())
                 {
-                    await projector.Update(events);
-                }
-                catch (Exception)
-                {
+                    await ApplyEvents(projector, currentState, events);
 
+                    var newState = new ProjectorProcessingState(DateTimeOffset.UtcNow);
+                    await _projectorStateStore.SaveProcessingState(projector, newState);
                 }
-
-                // TODO: Save projector state in database
+            }
+            catch (Exception ex)
+            {
+                var error = new ProjectorProcessingError(ex.Message, ex.StackTrace ?? "", currentState.ProcessingError?.ProcessingAttempts ?? 1, DateTimeOffset.Now);
+                var newState = new ProjectorProcessingState(currentState.LatestSuccessfulProcessingTime, error);
+                await _projectorStateStore.SaveProcessingState(projector, newState);
             }
         }
+    }
+
+    private async Task<IEnumerable<EventEntry>> LoadEvents(IProjector projector, long headSequenceNumber, Dictionary<long, IEnumerable<EventEntry>> eventCache)
+    {
+        var sequenceNumber = await projector.LoadSequenceNumber();
+
+        if (eventCache.ContainsKey(sequenceNumber))
+        {
+            return eventCache[sequenceNumber];
+        }
+
+        if (sequenceNumber < headSequenceNumber)
+        {
+            const int max = 50; // We need a limit to ensure that one projector does not block them all
+            var events = await _eventStore.LoadEvents(sequenceNumber + 1, max);
+            eventCache.Add(sequenceNumber, events);
+            return events;
+        }
+
+        return [];
+    }
+
+    private async Task ApplyEvents(IProjector projector, ProjectorProcessingState currentState, IEnumerable<EventEntry> events)
+    {
+        if (currentState.ProcessingError != null)
+        {
+            // Process one event at the time until we reach the failing one
+            foreach (var @event in events)
+            {
+                await projector.Update(new[] { @event });
+            }
+        }
+        else
+        {
+            // We expect every thing to be ok, so lets try to process the entire batch
+            await projector.Update(events);
+        }
+    }
+
+    public IEnumerable<IProjector> GetProjectors()
+    {
+        return _liveProjectors.Concat(_eventualProjectors);
+    }
+
+    public Task<ProjectorProcessingState> GetProcessingState(Guid projectorId)
+    {
+        var projector = GetProjectors().Single(x => x.Id == projectorId);
+
+        return _projectorStateStore.GetProcessingState(projector);
     }
 
     public T GetProjector<T>(Guid projectorId) where T : class, IProjector
