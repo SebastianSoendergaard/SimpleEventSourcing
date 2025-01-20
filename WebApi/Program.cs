@@ -1,7 +1,7 @@
 using EventSourcing.EventStore;
 using EventSourcing.EventStore.PostgreSql;
 using EventSourcing.Projections;
-using EventSourcing.Projections.InMemory;
+using EventSourcing.Projections.Files;
 using WebApi.User;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,7 +16,7 @@ var postgresConnectionString = "Server=localhost;Port=9002;User Id=postgres;Pass
 PostgreSqlEventStore.CreateIfNotExist(postgresConnectionString, "event_store");
 PostgreSqlEventStore eventStore = new(postgresConnectionString, "event_store");
 
-var projectorStateStore = new InMemoryProjectorStateStore();
+var projectorStateStore = new FileProjectorStateStore(@"c:/temp/eventstore/state");
 
 ProjectionManager projectionManager = new(eventStore, projectorStateStore);
 projectionManager.RegisterLiveProjector(new UserProjector());

@@ -101,7 +101,7 @@ public class FileEventStore : IEventStore
     private void WriteToFile(EventEntry eventEntry)
     {
         var json = JsonSerializer.Serialize(eventEntry, _jsonOptions);
-        var filename = $"{eventEntry.SequenceNumber:D4}_{eventEntry.StreamId}_v{eventEntry.Version}_{eventEntry.Event.GetType().Name}";
+        var filename = $"{eventEntry.SequenceNumber:D4}_{eventEntry.StreamId}_v{eventEntry.Version}_{eventEntry.Event.GetType().Name}.json";
         File.WriteAllText(Path.Combine(_fileDirectoryPath, filename), json);
     }
 
