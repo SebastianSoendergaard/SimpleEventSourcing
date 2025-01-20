@@ -44,11 +44,6 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
             }
 
             transaction.Commit();
-
-            if (_onEventsAppended != null)
-            {
-                await _onEventsAppended.Invoke();
-            }
         }
         catch (PostgresException ex) when (ex.Message.Contains("unique_stream_version"))
         {
@@ -57,6 +52,11 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
         catch (Exception ex)
         {
             throw new EventStoreException("Could not append events", ex);
+        }
+
+        if (_onEventsAppended != null)
+        {
+            await _onEventsAppended.Invoke();
         }
     }
 
