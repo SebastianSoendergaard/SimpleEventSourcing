@@ -6,37 +6,52 @@ public class ProjectionManager
 {
     private readonly IEventStore _eventStore;
     private readonly IProjectorStateStore _projectorStateStore;
-    private readonly List<IProjector> _liveProjectors = [];
-    private readonly List<IProjector> _eventualProjectors = [];
+    private readonly ExecutionLoop _asyncLoop = new();
+    private readonly List<IProjector> _synchronousProjectors = [];
+    private readonly List<IProjector> _asynchronousProjectors = [];
 
     public ProjectionManager(IEventStore eventStore, IProjectorStateStore projectorStateStore)
     {
         _eventStore = eventStore;
         _projectorStateStore = projectorStateStore;
 
-        _eventStore.RegisterForEventsAppendedNotifications(UpdateLiveProjections);
+        _eventStore.RegisterForEventsAppendedNotifications(UpdateSynchronousProjections);
     }
 
-    public void RegisterLiveProjector(IProjector projector)
+    public void RegisterSynchronousProjector(IProjector projector)
     {
         _projectorStateStore.UpsertProjector(projector);
-        _liveProjectors.Add(projector);
+        _synchronousProjectors.Add(projector);
     }
 
-    public void RegisterEventualProjector(IProjector projector)
+    public void RegisterAsynchronousProjector(IProjector projector)
     {
         _projectorStateStore.UpsertProjector(projector);
-        _eventualProjectors.Add(projector);
+        _asynchronousProjectors.Add(projector);
     }
 
-    private Task UpdateLiveProjections()
+    public void Start()
     {
-        return UpdateProjections(_liveProjectors);
+        _asyncLoop.Start(
+            TimeSpan.FromSeconds(20),
+            (cancellationToken) => UpdateAsynchronousProjections(),
+            exception => { }
+        );
     }
 
-    private Task UpdateEventualProjections()
+    public void Stop()
     {
-        return UpdateProjections(_eventualProjectors);
+        _asyncLoop.Stop();
+    }
+
+    private Task UpdateSynchronousProjections()
+    {
+        return UpdateProjections(_synchronousProjectors);
+    }
+
+    private Task UpdateAsynchronousProjections()
+    {
+        return UpdateProjections(_asynchronousProjectors);
     }
 
     private async Task UpdateProjections(IEnumerable<IProjector> projectors)
@@ -107,7 +122,7 @@ public class ProjectionManager
 
     public IEnumerable<IProjector> GetProjectors()
     {
-        return _liveProjectors.Concat(_eventualProjectors);
+        return _synchronousProjectors.Concat(_asynchronousProjectors);
     }
 
     public Task<ProjectorProcessingState> GetProcessingState(Guid projectorId)
@@ -119,8 +134,8 @@ public class ProjectionManager
 
     public T GetProjector<T>(Guid projectorId) where T : class, IProjector
     {
-        var projector = _liveProjectors
-            .Concat(_eventualProjectors)
+        var projector = _synchronousProjectors
+            .Concat(_asynchronousProjectors)
             .SingleOrDefault(x => x.Id == projectorId);
 
         var typedProjector = projector as T;

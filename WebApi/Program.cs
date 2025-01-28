@@ -28,9 +28,9 @@ PostgreSqlEventStore eventStore = new(postgresConnectionString, "event_store");
 var projectorStateStore = new FileProjectorStateStore(@"c:/temp/eventstore/state");
 
 ProjectionManager projectionManager = new(eventStore, projectorStateStore);
-projectionManager.RegisterLiveProjector(new UserProjector());
-projectionManager.RegisterLiveProjector(new UserNameProjector());
-projectionManager.RegisterLiveProjector(new PersistedUserProjector(projectionDb));
+projectionManager.RegisterSynchronousProjector(new UserProjector());
+projectionManager.RegisterAsynchronousProjector(new UserNameProjector());
+projectionManager.RegisterSynchronousProjector(new PersistedUserProjector(projectionDb));
 
 builder.Services.AddSingleton<IEventStore>(eventStore);
 builder.Services.AddSingleton(projectionManager);
@@ -58,4 +58,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+projectionManager.Start();
 app.Run();
+projectionManager.Stop();
