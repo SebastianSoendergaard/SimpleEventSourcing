@@ -1,3 +1,5 @@
+using Basses.SimpleDocumentStore;
+using Basses.SimpleDocumentStore.PostgreSql;
 using EventSourcing.EventStore;
 using EventSourcing.EventStore.PostgreSql;
 using EventSourcing.Projections;
@@ -5,6 +7,13 @@ using EventSourcing.Projections.Files;
 using WebApi.User;
 
 var builder = WebApplication.CreateBuilder(args);
+
+
+SimpleObjectDbConfiguration config = new();
+config.RegisterDataType<PersistedUserProjectorState>(i => i.Id);
+var projectionPostgresConnectionString = @"Server=localhost;Port=9002;User Id=postgres;Password=Passw0rd;Database=simple_object_db;";
+SimplePostgreSqlObjectDb.CreateIfNotExist(projectionPostgresConnectionString, config);
+ISimpleObjectDb projectionDb = new SimplePostgreSqlObjectDb(projectionPostgresConnectionString, config);
 
 // Add services to the container.
 //InmemoryEventStore eventStore = new();
@@ -21,6 +30,7 @@ var projectorStateStore = new FileProjectorStateStore(@"c:/temp/eventstore/state
 ProjectionManager projectionManager = new(eventStore, projectorStateStore);
 projectionManager.RegisterLiveProjector(new UserProjector());
 projectionManager.RegisterLiveProjector(new UserNameProjector());
+projectionManager.RegisterLiveProjector(new PersistedUserProjector(projectionDb));
 
 builder.Services.AddSingleton<IEventStore>(eventStore);
 builder.Services.AddSingleton(projectionManager);
