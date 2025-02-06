@@ -57,11 +57,4 @@ public class SupportController : ControllerBase
 
         return projectorStates;
     }
-
-    [HttpGet("GetProjectorState/{projectorId:guid}")]
-    public async Task<object> GetProjectorState(Guid projectorId)
-    {
-        var state = await _projectionManager.GetProcessingState(projectorId);
-        return state;
-    }
 }
