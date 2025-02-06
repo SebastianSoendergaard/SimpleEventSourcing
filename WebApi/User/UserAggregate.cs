@@ -2,7 +2,9 @@
 
 namespace WebApi.User;
 
-public class UserAggregate : Aggregate
+public class UserAggregate : Aggregate,
+    IDomainEventHandler<UserCreated>,
+    IDomainEventHandler<UserNameChanged>
 {
     public string Name { get; private set; } = string.Empty;
 

@@ -33,6 +33,9 @@ public abstract class Aggregate
 
     private void Mutate(IDomainEvent @event)
     {
-        ((dynamic)this).On((dynamic)@event);
+        if (MutationRegistry.CanMutate(this, @event, typeof(IDomainEventHandler<>)))
+        {
+            ((dynamic)this).On((dynamic)@event);
+        }
     }
 }
