@@ -52,6 +52,8 @@ public class ProjectionManager
     private Task UpdateAsynchronousProjections()
     {
         return UpdateProjections(_asynchronousProjectors);
+
+        // TODO: continue updates if not done yet
     }
 
     private async Task UpdateProjections(IEnumerable<IProjector> projectors)

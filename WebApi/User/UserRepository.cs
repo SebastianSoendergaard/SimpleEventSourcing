@@ -1,6 +1,6 @@
-﻿using EventSourcing.EventStore;
+﻿using EventSourcing.Enablers;
+using EventSourcing.EventStore;
 using EventSourcing.Projections;
-using WebApi.Domain;
 
 namespace WebApi.User;
 

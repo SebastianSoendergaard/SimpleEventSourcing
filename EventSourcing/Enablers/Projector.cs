@@ -1,7 +1,7 @@
 ﻿using EventSourcing.EventStore;
 using EventSourcing.Projections;
 
-namespace WebApi.Domain;
+namespace EventSourcing.Enablers;
 
 public abstract class Projector : IProjector
 {

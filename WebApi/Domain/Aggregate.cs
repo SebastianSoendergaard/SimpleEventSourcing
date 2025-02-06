@@ -1,4 +1,4 @@
-﻿namespace WebApi.Domain;
+﻿namespace EventSourcing.Enablers;
 
 public abstract class Aggregate
 {
@@ -13,7 +13,7 @@ public abstract class Aggregate
 
     public Aggregate(IEnumerable<IDomainEvent> events)
     {
-        foreach (IDomainEvent @event in events)
+        foreach (var @event in events)
         {
             Mutate(@event);
             Version++;
