@@ -1,4 +1,4 @@
-﻿namespace EventSourcing.Enablers
+﻿namespace Basses.SimpleEventStore.Enablers
 {
     public interface IProjectionEventHandler<T> where T : IDomainEvent
     {

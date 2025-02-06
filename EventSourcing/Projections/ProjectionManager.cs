@@ -1,6 +1,6 @@
-﻿using EventSourcing.EventStore;
+﻿using Basses.SimpleEventStore.EventStore;
 
-namespace EventSourcing.Projections;
+namespace Basses.SimpleEventStore.Projections;
 
 public class ProjectionManager
 {

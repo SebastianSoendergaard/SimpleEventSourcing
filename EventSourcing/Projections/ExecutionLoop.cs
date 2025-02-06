@@ -1,4 +1,4 @@
-﻿namespace EventSourcing.Projections;
+﻿namespace Basses.SimpleEventStore.Projections;
 
 internal class ExecutionLoop
 {

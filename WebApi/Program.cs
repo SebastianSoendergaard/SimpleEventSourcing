@@ -1,9 +1,9 @@
 using Basses.SimpleDocumentStore;
 using Basses.SimpleDocumentStore.PostgreSql;
-using EventSourcing.EventStore;
-using EventSourcing.EventStore.PostgreSql;
-using EventSourcing.Projections;
-using EventSourcing.Projections.Files;
+using Basses.SimpleEventStore.EventStore;
+using Basses.SimpleEventStore.PostgreSql;
+using Basses.SimpleEventStore.Projections;
+using Basses.SimpleEventStore.Projections.Files;
 using WebApi.User;
 
 var builder = WebApplication.CreateBuilder(args);

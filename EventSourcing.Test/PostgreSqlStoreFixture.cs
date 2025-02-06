@@ -1,5 +1,5 @@
-﻿using EventSourcing.EventStore;
-using EventSourcing.EventStore.PostgreSql;
+﻿using Basses.SimpleEventStore.EventStore;
+using Basses.SimpleEventStore.PostgreSql;
 using Npgsql;
 
 namespace EventSourcing.Test;

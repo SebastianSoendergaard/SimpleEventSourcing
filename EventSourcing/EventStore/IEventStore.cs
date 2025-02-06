@@ -1,4 +1,4 @@
-﻿namespace EventSourcing.EventStore
+﻿namespace Basses.SimpleEventStore.EventStore
 {
     public interface IEventStore
     {

@@ -1,6 +1,6 @@
-﻿using EventSourcing.Enablers;
-using EventSourcing.EventStore;
-using EventSourcing.Projections;
+﻿using Basses.SimpleEventStore.Enablers;
+using Basses.SimpleEventStore.EventStore;
+using Basses.SimpleEventStore.Projections;
 
 namespace WebApi.User;
 

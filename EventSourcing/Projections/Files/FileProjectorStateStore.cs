@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace EventSourcing.Projections.Files;
+namespace Basses.SimpleEventStore.Projections.Files;
 
 public class FileProjectorStateStore : IProjectorStateStore
 {

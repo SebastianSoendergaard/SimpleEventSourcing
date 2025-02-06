@@ -1,7 +1,7 @@
-﻿using EventSourcing.EventStore;
-using EventSourcing.Projections;
+﻿using Basses.SimpleEventStore.EventStore;
+using Basses.SimpleEventStore.Projections;
 
-namespace EventSourcing.Enablers;
+namespace Basses.SimpleEventStore.Enablers;
 
 public abstract class Projector : IProjector
 {

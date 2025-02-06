@@ -1,4 +1,4 @@
-﻿namespace EventSourcing.Projections.InMemory;
+﻿namespace Basses.SimpleEventStore.Projections.InMemory;
 
 public class InMemoryProjectorStateStore : IProjectorStateStore
 {

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 
-namespace EventSourcing.Enablers;
+namespace Basses.SimpleEventStore.Enablers;
 
 public class MutationRegistry
 {

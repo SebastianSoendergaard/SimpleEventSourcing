@@ -1,4 +1,4 @@
-using EventSourcing.EventStore;
+using Basses.SimpleEventStore.EventStore;
 
 namespace EventSourcing.Test;
 

@@ -1,4 +1,4 @@
-﻿namespace EventSourcing.EventStore.InMemory;
+﻿namespace Basses.SimpleEventStore.EventStore.InMemory;
 
 public class InMemoryEventStore : IEventStore
 {

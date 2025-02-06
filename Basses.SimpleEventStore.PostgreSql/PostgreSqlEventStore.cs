@@ -1,9 +1,10 @@
 ﻿using System.Data;
 using System.Text.Json;
+using Basses.SimpleEventStore.EventStore;
 using Npgsql;
 using NpgsqlTypes;
 
-namespace EventSourcing.EventStore.PostgreSql;
+namespace Basses.SimpleEventStore.PostgreSql;
 
 public class PostgreSqlEventStore : IEventStore, IDisposable
 {

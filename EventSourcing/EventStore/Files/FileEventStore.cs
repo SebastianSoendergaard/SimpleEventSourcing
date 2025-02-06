@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace EventSourcing.EventStore.Files;
+namespace Basses.SimpleEventStore.EventStore.Files;
 
 public class FileEventStore : IEventStore
 {

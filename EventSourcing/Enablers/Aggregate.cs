@@ -1,4 +1,4 @@
-﻿namespace EventSourcing.Enablers;
+﻿namespace Basses.SimpleEventStore.Enablers;
 
 public abstract class Aggregate
 {

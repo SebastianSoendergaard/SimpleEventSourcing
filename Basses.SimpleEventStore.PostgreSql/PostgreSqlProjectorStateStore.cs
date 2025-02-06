@@ -1,4 +1,6 @@
-﻿namespace EventSourcing.Projections.PostgreSql;
+﻿using Basses.SimpleEventStore.Projections;
+
+namespace Basses.SimpleEventStore.PostgreSql;
 
 public class PostgreSqlProjectorStateStore : IProjectorStateStore
 {

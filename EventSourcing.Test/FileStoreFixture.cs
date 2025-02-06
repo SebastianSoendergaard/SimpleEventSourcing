@@ -1,5 +1,5 @@
-﻿using EventSourcing.EventStore;
-using EventSourcing.EventStore.Files;
+﻿using Basses.SimpleEventStore.EventStore;
+using Basses.SimpleEventStore.EventStore.Files;
 
 namespace EventSourcing.Test;
 

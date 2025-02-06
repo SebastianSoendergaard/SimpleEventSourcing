@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\EventSourcing\EventSourcing.csproj" />
+    <ProjectReference Include="..\Basses.SimpleEventStore.PostgreSql\Basses.SimpleEventStore.PostgreSql.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,5 +1,5 @@
 ﻿using Basses.SimpleDocumentStore;
-using EventSourcing.Enablers;
+using Basses.SimpleEventStore.Enablers;
 
 namespace WebApi.User;
 

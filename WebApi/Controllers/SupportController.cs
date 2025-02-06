@@ -1,5 +1,5 @@
-using EventSourcing.EventStore;
-using EventSourcing.Projections;
+using Basses.SimpleEventStore.EventStore;
+using Basses.SimpleEventStore.Projections;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebApi.Controllers;
