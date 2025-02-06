@@ -2,22 +2,15 @@
 
 namespace WebApi.User;
 
-public class UserNameProjector : Projector
+public class UserNameProjector : Projector,
+    IProjectionEventHandler<UserNameChanged>
 {
     public static Guid ProjectorId = new("325933F7-883B-4E9F-BBFE-F85A3EE4027B");
 
     private readonly List<UserNameProjection> _projections = [];
     private long _sequenceNumber = 0;
 
-    protected override Guid GetId()
-    {
-        return ProjectorId;
-    }
-
-    protected override IEnumerable<Type> GetDomainEventTypes()
-    {
-        return [typeof(UserNameChanged)];
-    }
+    public override Guid Id => ProjectorId;
 
     protected override Task<long> GetSequenceNumber()
     {
@@ -35,12 +28,12 @@ public class UserNameProjector : Projector
         return _projections;
     }
 
-    public Task UpdateWith(UserNameChanged @event, Guid streamId, int version, DateTimeOffset timestamp)
+    public Task UpdateWith(UserNameChanged @event, EventData eventData)
     {
         UserNameProjection change = new()
         {
             Name = @event.Name,
-            Time = timestamp,
+            Time = eventData.Timestamp,
         };
         _projections.Add(change);
 

@@ -3,7 +3,9 @@ using EventSourcing.Enablers;
 
 namespace WebApi.User;
 
-public class PersistedUserProjector : Projector
+public class PersistedUserProjector : Projector,
+    IProjectionEventHandler<UserCreated>,
+    IProjectionEventHandler<UserNameChanged>
 {
     public static Guid ProjectorId = new("8E2AB560-5B85-44CD-9743-090F9A584363");
 
@@ -11,23 +13,11 @@ public class PersistedUserProjector : Projector
     private readonly ISimpleObjectDb _db;
     private long _sequenceNumber = 0;
 
+    public override Guid Id => ProjectorId;
+
     public PersistedUserProjector(ISimpleObjectDb db)
     {
         _db = db;
-    }
-
-    protected override Guid GetId()
-    {
-        return ProjectorId;
-    }
-
-    protected override IEnumerable<Type> GetDomainEventTypes()
-    {
-        return
-        [
-            typeof(UserCreated),
-            typeof(UserNameChanged)
-        ];
     }
 
     protected override async Task<long> GetSequenceNumber()
@@ -59,13 +49,13 @@ public class PersistedUserProjector : Projector
         return _userProjections[userId];
     }
 
-    public Task UpdateWith(UserCreated @event, Guid streamId, int version, DateTimeOffset timestamp)
+    public Task UpdateWith(UserCreated @event, EventData eventData)
     {
         PersistedUserProjection userProjection = new()
         {
             Id = @event.Id,
-            Version = version,
-            LastUpdated = timestamp
+            Version = eventData.Version,
+            LastUpdated = eventData.Timestamp
         };
 
         _userProjections.Add(userProjection.Id, userProjection);
@@ -73,12 +63,12 @@ public class PersistedUserProjector : Projector
         return Task.CompletedTask;
     }
 
-    public Task UpdateWith(UserNameChanged @event, Guid streamId, int version, DateTimeOffset timestamp)
+    public Task UpdateWith(UserNameChanged @event, EventData eventData)
     {
-        var userProjection = _userProjections[streamId];
+        var userProjection = _userProjections[eventData.StreamId];
         userProjection.Name = @event.Name;
-        userProjection.Version = version;
-        userProjection.LastUpdated = timestamp;
+        userProjection.Version = eventData.Version;
+        userProjection.LastUpdated = eventData.Timestamp;
 
         return Task.CompletedTask;
     }
