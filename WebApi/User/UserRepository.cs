@@ -8,7 +8,7 @@ public class UserRepository : EventSourcedRepository<UserAggregate>
 {
     private readonly ProjectionManager _projectionManager;
 
-    public UserRepository(IEventStore eventStore, ProjectionManager projectionManager) : base(eventStore, projectionManager)
+    public UserRepository(IEventStore eventStore, ProjectionManager projectionManager) : base(eventStore)
     {
         _projectionManager = projectionManager;
     }
