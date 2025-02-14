@@ -1,14 +1,13 @@
-﻿using Basses.SimpleEventStore.Enablers;
-using UnderstandingEventsourcingExample.Cart.Domain;
+﻿using UnderstandingEventsourcingExample.Cart.Domain;
 
-namespace UnderstandingEventsourcingExample.Cart.AddItem;
+namespace UnderstandingEventsourcingExample.Cart.RemoveItem;
 
 public record RemoveItemCommand(
     Guid CartId,
     Guid ItemId
 );
 
-public class RemoveItemCommandHandler(EventSourcedRepository<CartAggregate> repository)
+public class RemoveItemCommandHandler(CartRepository repository)
 {
     public async Task Handle(RemoveItemCommand command)
     {

@@ -1,5 +1,4 @@
-﻿using Basses.SimpleEventStore.Enablers;
-using UnderstandingEventsourcingExample.Cart.Domain;
+﻿using UnderstandingEventsourcingExample.Cart.Domain;
 
 namespace UnderstandingEventsourcingExample.Cart.AddItem;
 
@@ -13,7 +12,7 @@ public record AddItemCommand(
     Guid ProductId
 );
 
-public class AddItemCommandHandler(EventSourcedRepository<CartAggregate> repository)
+public class AddItemCommandHandler(CartRepository repository)
 {
     public async Task Handle(AddItemCommand command)
     {
