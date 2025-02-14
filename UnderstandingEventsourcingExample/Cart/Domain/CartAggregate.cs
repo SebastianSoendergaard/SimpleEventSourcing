@@ -5,9 +5,12 @@ namespace UnderstandingEventsourcingExample.Cart.Domain;
 public class CartAggregate : Aggregate,
     IDomainEventHandler<CartCreatedEvent>,
     IDomainEventHandler<ItemAddedEvent>,
-    IDomainEventHandler<ItemRemovedEvent>
+    IDomainEventHandler<ItemRemovedEvent>,
+    IDomainEventHandler<CartClearedEvent>
 {
     List<Guid> _items = [];
+
+    public CartAggregate(IEnumerable<IDomainEvent> events) : base(events) { }
 
     public CartAggregate(Guid id)
     {
@@ -34,6 +37,11 @@ public class CartAggregate : Aggregate,
         Apply(new ItemRemovedEvent(Id, itemId));
     }
 
+    public void Clear()
+    {
+        Apply(new CartClearedEvent(Id));
+    }
+
     public void On(CartCreatedEvent @event)
     {
         Id = @event.CartId;
@@ -47,5 +55,10 @@ public class CartAggregate : Aggregate,
     public void On(ItemRemovedEvent @event)
     {
         _items.Remove(@event.ItemId);
+    }
+
+    public void On(CartClearedEvent @event)
+    {
+        _items.Clear();
     }
 }
