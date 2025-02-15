@@ -8,13 +8,13 @@ public class CartAggregate : Aggregate,
     IDomainEventHandler<ItemRemovedEvent>,
     IDomainEventHandler<CartClearedEvent>
 {
-    List<Guid> _items = [];
+    private List<Guid> _items = [];
 
     public CartAggregate(IEnumerable<IDomainEvent> events) : base(events) { }
 
-    public CartAggregate(Guid id)
+    public CartAggregate(Guid cartId)
     {
-        Apply(new CartCreatedEvent(id));
+        Apply(new CartCreatedEvent(cartId));
     }
 
     public void AddItem(string description, string image, decimal price, Guid itemId, Guid productId)

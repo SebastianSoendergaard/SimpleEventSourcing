@@ -1,5 +1,4 @@
-﻿using Basses.SimpleEventStore.PostgreSql;
-using Microsoft.OpenApi.Models;
+﻿using Microsoft.OpenApi.Models;
 using UnderstandingEventsourcingExample.Cart;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,8 +23,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-//app.UseHttpsRedirection();
 
 app.RegisterCartModuleEndpoints();
 
