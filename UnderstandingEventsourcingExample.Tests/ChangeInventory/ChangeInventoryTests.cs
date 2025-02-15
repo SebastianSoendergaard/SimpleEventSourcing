@@ -2,7 +2,7 @@
 using Basses.SimpleEventStore.Enablers;
 using Basses.SimpleEventStore.EventStore;
 using Basses.SimpleEventStore.EventStore.InMemory;
-using UnderstandingEventsourcingExample.Cart.AddItem;
+using UnderstandingEventsourcingExample.Cart.ChangeInventory;
 using UnderstandingEventsourcingExample.Cart.Domain;
 
 namespace UnderstandingEventsourcingExample.Tests.ChangeInventory;

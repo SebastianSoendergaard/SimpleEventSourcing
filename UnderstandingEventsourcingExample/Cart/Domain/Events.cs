@@ -23,3 +23,8 @@ public record ItemRemovedEvent(
 public record CartClearedEvent(
     Guid CartId
 ) : IDomainEvent;
+
+public record InventoryChangedEvent(
+    Guid ProductId,
+    int Inventory
+) : IDomainEvent;
