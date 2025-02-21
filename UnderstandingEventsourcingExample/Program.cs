@@ -8,15 +8,11 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Understanding Eventsourcing", Description = "Implementation example based on the book...", Version = "v1" });
 });
 
-PostgreSqlEventStore eventStore = new(
-    "Server=localhost;Port=9002;User Id=postgres;Password=Passw0rd;Database=simple_event_sourcing;",
-    "understanding_eventsourcing",
-    "event_store");
-builder.Services.AddSingleton<IEventStore>(eventStore);
-
-builder.Services.AddCartModule();
+builder.Services.AddCartModule(builder.Configuration);
 
 var app = builder.Build();
+
+app.UseCartModule();
 
 if (app.Environment.IsDevelopment())
 {
