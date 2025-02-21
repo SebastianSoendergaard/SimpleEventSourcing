@@ -7,6 +7,7 @@ using UnderstandingEventsourcingExample.Cart.ChangeInventory;
 using UnderstandingEventsourcingExample.Cart.ClearCart;
 using UnderstandingEventsourcingExample.Cart.Domain;
 using UnderstandingEventsourcingExample.Cart.GetCartItems;
+using UnderstandingEventsourcingExample.Cart.GetInventory;
 using UnderstandingEventsourcingExample.Cart.RemoveItem;
 
 namespace UnderstandingEventsourcingExample.Cart;
@@ -31,6 +32,9 @@ public static class Module
         services.AddScoped<ClearCartCommandHandler>();
         services.AddScoped<GetCartItemsQueryHandler>();
         services.AddScoped<ChangeInventoryCommandHandler>();
+        services.AddScoped<GetInventoryQueryHandler>();
+
+        services.AddScoped<GetInventoryProjector>();
 
         services.AddScoped<CartRepository>();
         services.AddScoped<InventoryRepository>();
@@ -54,6 +58,8 @@ public static class Module
         app.MapGet("/api/cart/get-items/v1", async ([FromServices] GetCartItemsQueryHandler handler, [FromQuery] Guid cartId) => await handler.Handle(new GetCartItemsQuery(cartId)));
 
         app.MapPost("/api/inventories/change-inventory/v1", async ([FromServices] ChangeInventoryCommandHandler handler, [FromBody] ChangeInventoryCommand cmd) => await handler.Handle(cmd));
+        app.MapGet("/api/inventories/get-inventory/v1", async ([FromServices] GetInventoryQueryHandler handler, [FromQuery] Guid productId) => await handler.Handle(new GetInventoryQuery(productId)));
+
         app.MapGet("/api/support/get-events/v1", async ([FromServices] IEventStore eventStore, [FromQuery] Guid aggregateId) => await eventStore.LoadEvents(aggregateId));
     }
 }
