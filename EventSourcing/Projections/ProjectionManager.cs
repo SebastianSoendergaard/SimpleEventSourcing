@@ -1,4 +1,5 @@
 ﻿using Basses.SimpleEventStore.EventStore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Basses.SimpleEventStore.Projections;
 
@@ -6,28 +7,35 @@ public class ProjectionManager
 {
     private readonly IEventStore _eventStore;
     private readonly IProjectorStateStore _projectorStateStore;
+    private readonly IServiceProvider _serviceProvider;
     private readonly ExecutionLoop _asyncLoop = new();
-    private readonly List<IProjector> _synchronousProjectors = [];
-    private readonly List<IProjector> _asynchronousProjectors = [];
+    private readonly List<Type> _synchronousProjectors = [];
+    private readonly List<Type> _asynchronousProjectors = [];
 
-    public ProjectionManager(IEventStore eventStore, IProjectorStateStore projectorStateStore)
+    public ProjectionManager(IEventStore eventStore, IProjectorStateStore projectorStateStore, IServiceProvider serviceProvider)
     {
         _eventStore = eventStore;
         _projectorStateStore = projectorStateStore;
-
+        _serviceProvider = serviceProvider;
         _eventStore.RegisterForEventsAppendedNotifications(UpdateSynchronousProjections);
     }
 
-    public void RegisterSynchronousProjector(IProjector projector)
+    public ProjectionManager RegisterSynchronousProjector<TProjector>() where TProjector : IProjector
     {
+        using var scope = _serviceProvider.CreateScope();
+        var projector = scope.ServiceProvider.GetRequiredService<TProjector>();
         _projectorStateStore.UpsertProjector(projector);
-        _synchronousProjectors.Add(projector);
+        _synchronousProjectors.Add(projector.GetType());
+        return this;
     }
 
-    public void RegisterAsynchronousProjector(IProjector projector)
+    public ProjectionManager RegisterAsynchronousProjector<TProjector>() where TProjector : IProjector
     {
+        using var scope = _serviceProvider.CreateScope();
+        var projector = scope.ServiceProvider.GetRequiredService<TProjector>();
         _projectorStateStore.UpsertProjector(projector);
-        _asynchronousProjectors.Add(projector);
+        _synchronousProjectors.Add(projector.GetType());
+        return this;
     }
 
     public void Start()
@@ -56,13 +64,17 @@ public class ProjectionManager
         // TODO: continue updates if not done yet
     }
 
-    private async Task UpdateProjections(IEnumerable<IProjector> projectors)
+    private async Task UpdateProjections(IEnumerable<Type> projectorTypes)
     {
+        using var scope = _serviceProvider.CreateScope();
+
         var headSequenceNumber = await _eventStore.GetHeadSequenceNumber();
         var eventCache = new Dictionary<long, IEnumerable<EventEntry>>();
 
-        foreach (var projector in projectors)
+        foreach (var projectorType in projectorTypes)
         {
+            var projector = (IProjector)scope.ServiceProvider.GetRequiredService(projectorType);
+
             var currentState = await _projectorStateStore.GetProcessingState(projector);
 
             try
@@ -122,9 +134,35 @@ public class ProjectionManager
         }
     }
 
-    public IEnumerable<IProjector> GetProjectors()
+    public IEnumerable<Type> GetProjectorTypes()
     {
         return _synchronousProjectors.Concat(_asynchronousProjectors);
+    }
+
+    public Task<ProjectorProcessingState> GetProcessingState(IProjector projector)
+    {
+        return _projectorStateStore.GetProcessingState(projector);
+    }
+
+    #region Deprecated
+
+    public void RegisterSynchronousProjector(IProjector projector)
+    {
+        _projectorStateStore.UpsertProjector(projector);
+        _synchronousProjectors.Add(projector.GetType());
+    }
+
+    public void RegisterAsynchronousProjector(IProjector projector)
+    {
+        _projectorStateStore.UpsertProjector(projector);
+        _asynchronousProjectors.Add(projector.GetType());
+    }
+
+    public IEnumerable<IProjector> GetProjectors()
+    {
+        var projectorTypes = _synchronousProjectors.Concat(_asynchronousProjectors);
+        var projectors = GetProjectors(projectorTypes, _serviceProvider);
+        return projectors;
     }
 
     public Task<ProjectorProcessingState> GetProcessingState(Guid projectorId)
@@ -136,12 +174,21 @@ public class ProjectionManager
 
     public T GetProjector<T>(Guid projectorId) where T : class, IProjector
     {
-        var projector = _synchronousProjectors
-            .Concat(_asynchronousProjectors)
+        var projector = GetProjectors()
             .SingleOrDefault(x => x.Id == projectorId);
 
         var typedProjector = projector as T;
 
         return typedProjector ?? throw new InvalidOperationException($"No projector with id '{projectorId}' can be found");
     }
+
+    private IEnumerable<IProjector> GetProjectors(IEnumerable<Type> projectorTypes, IServiceProvider serviceProvider)
+    {
+        foreach (var type in projectorTypes)
+        {
+            yield return (IProjector)serviceProvider.GetRequiredService(type);
+        }
+    }
+
+    #endregion
 }

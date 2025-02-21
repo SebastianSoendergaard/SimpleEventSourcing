@@ -1,4 +1,4 @@
-using Basses.SimpleDocumentStore;
+﻿using Basses.SimpleDocumentStore;
 using Basses.SimpleDocumentStore.PostgreSql;
 using Basses.SimpleEventStore.EventStore;
 using Basses.SimpleEventStore.PostgreSql;
@@ -26,7 +26,7 @@ var eventStore = new PostgreSqlEventStore(postgresConnectionString, "web_api", $
 
 var projectorStateStore = new FileProjectorStateStore(@"c:/temp/eventstore/state");
 
-ProjectionManager projectionManager = new(eventStore, projectorStateStore);
+ProjectionManager projectionManager = new(eventStore, projectorStateStore, builder.Build().Services);
 projectionManager.RegisterSynchronousProjector(new UserProjector());
 projectionManager.RegisterAsynchronousProjector(new UserNameProjector());
 projectionManager.RegisterSynchronousProjector(new PersistedUserProjector(projectionDb));
