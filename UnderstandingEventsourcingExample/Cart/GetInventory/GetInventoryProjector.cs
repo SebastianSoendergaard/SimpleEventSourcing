@@ -19,14 +19,14 @@ public class GetInventoryProjector : Projector,
 
     public override Guid Id => ProjectorId;
 
-    protected override Task<long> GetSequenceNumber()
-    {
-        return _repository.GetLastProcessedSequenceNumber();
-    }
-
     public Task<InventoryReadModel> GetReadModel(Guid ProductId)
     {
         return _repository.GetByProductId(ProductId);
+    }
+
+    protected override Task<long> LoadSequenceNumber()
+    {
+        return _repository.GetLastProcessedSequenceNumber();
     }
 
     protected override Task UpdateStarting()

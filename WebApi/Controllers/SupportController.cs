@@ -43,7 +43,7 @@ public class SupportController : ControllerBase
 
         foreach (var projector in projectors)
         {
-            var sequenceNumber = await projector.LoadSequenceNumber();
+            var sequenceNumber = await projector.GetSequenceNumber();
             var processingState = await _projectionManager.GetProcessingState(projector.Id);
 
             projectorStates.Add(new

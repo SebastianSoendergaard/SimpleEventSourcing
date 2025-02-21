@@ -99,7 +99,7 @@ public class ProjectionManager
 
     private async Task<IEnumerable<EventEntry>> LoadEvents(IProjector projector, long headSequenceNumber, Dictionary<long, IEnumerable<EventEntry>> eventCache)
     {
-        var sequenceNumber = await projector.LoadSequenceNumber();
+        var sequenceNumber = await projector.GetSequenceNumber();
 
         if (eventCache.ContainsKey(sequenceNumber))
         {

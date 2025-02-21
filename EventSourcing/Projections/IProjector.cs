@@ -6,6 +6,6 @@ public interface IProjector
 {
     Guid Id { get; }
     string Name { get; }
-    Task<long> LoadSequenceNumber();
+    Task<long> GetSequenceNumber();
     Task Update(IEnumerable<EventEntry> events);
 }

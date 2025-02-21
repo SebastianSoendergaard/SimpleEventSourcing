@@ -11,17 +11,11 @@ public class CartItemsProjector : Projector,
 {
     public static Guid ProjectorId = new("EF56C1F5-7AD5-463D-AB5C-CF873E7A06F7");
 
-    private long _sequenceNumber = 0;
     private Guid? _cartId;
     private decimal _totalPrice = 0;
     private List<CartItem> _items = [];
 
     public override Guid Id => ProjectorId;
-
-    protected override Task<long> GetSequenceNumber()
-    {
-        return Task.FromResult(_sequenceNumber);
-    }
 
     public CartItemsReadModel? GetReadModel()
     {

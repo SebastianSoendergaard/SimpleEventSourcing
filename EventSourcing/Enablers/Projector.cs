@@ -9,9 +9,7 @@ public abstract class Projector : IProjector
 
     public string Name => GetType().Name;
 
-    private long _sequenceNumber;
-
-    protected abstract Task<long> GetSequenceNumber();
+    private long _sequenceNumber = 0;
 
     public async Task Update(IEnumerable<EventEntry> events)
     {
@@ -37,12 +35,13 @@ public abstract class Projector : IProjector
         return Task.CompletedTask;
     }
 
-    public async Task<long> LoadSequenceNumber()
+    public async Task<long> GetSequenceNumber()
     {
-        _sequenceNumber = await GetSequenceNumber();
+        var _sequenceNumber = await LoadSequenceNumber();
         return _sequenceNumber;
     }
 
+    protected virtual Task<long> LoadSequenceNumber() { return Task.FromResult(_sequenceNumber); }
     protected virtual Task UpdateStarting() { return Task.CompletedTask; }
     protected virtual Task UpdateComplete(long sequenceNumber) { return Task.CompletedTask; }
 }
