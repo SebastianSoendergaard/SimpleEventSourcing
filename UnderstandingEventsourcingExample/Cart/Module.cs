@@ -8,6 +8,7 @@ using UnderstandingEventsourcingExample.Cart.ClearCart;
 using UnderstandingEventsourcingExample.Cart.Domain;
 using UnderstandingEventsourcingExample.Cart.GetCartItems;
 using UnderstandingEventsourcingExample.Cart.GetInventory;
+using UnderstandingEventsourcingExample.Cart.Migration;
 using UnderstandingEventsourcingExample.Cart.RemoveItem;
 
 namespace UnderstandingEventsourcingExample.Cart;
@@ -34,6 +35,7 @@ public static class Module
         services.AddScoped<ChangeInventoryCommandHandler>();
         services.AddScoped<GetInventoryQueryHandler>();
 
+        ReadModelMigrator.Migrate(connectionString);
         services.AddScoped<GetInventoryProjector>();
 
         services.AddScoped<CartRepository>();
