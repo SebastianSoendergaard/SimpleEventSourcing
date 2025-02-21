@@ -15,8 +15,7 @@ public class PostgreSqlStoreFixture : IDisposable
     {
         _storeName = Guid.NewGuid().ToString()[..8];
         var connectionString = $"Server=localhost;Port=9002;User Id=postgres;Password=Passw0rd;Database={_dbNamePrefix}{_storeName};";
-        PostgreSqlEventStore.CreateIfNotExist(connectionString, $"store_{_storeName}");
-        var store = new PostgreSqlEventStore(connectionString, $"store_{_storeName}");
+        var store = new PostgreSqlEventStore(connectionString, "unit_test", $"store_{_storeName}");
         _eventStores.Add(store);
         return store;
     }

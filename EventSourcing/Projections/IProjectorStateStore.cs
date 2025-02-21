@@ -7,6 +7,16 @@ public interface IProjectorStateStore
     Task<ProjectorProcessingState> GetProcessingState(IProjector projector);
 }
 
-public record ProjectorProcessingState(DateTimeOffset LatestSuccessfulProcessingTime, ProjectorProcessingError? ProcessingError = null);
-public record ProjectorProcessingError(string ErrorMessage, string Stacktrace, int ProcessingAttempts, DateTimeOffset LatestRetryTime);
+public record ProjectorProcessingState(
+    DateTimeOffset LatestSuccessfulProcessingTime,
+    long ConfirmedSequenceNumber,
+    ProjectorProcessingError? ProcessingError = null
+);
+
+public record ProjectorProcessingError(
+    string ErrorMessage,
+    string Stacktrace,
+    int ProcessingAttempts,
+    DateTimeOffset LatestRetryTime
+);
 

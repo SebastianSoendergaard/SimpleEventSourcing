@@ -19,7 +19,7 @@ public class InMemoryProjectorStateStore : IProjectorStateStore
     {
         if (!_processingStates.ContainsKey(projector.Id))
         {
-            _processingStates.Add(projector.Id, new ProjectorProcessingState(DateTimeOffset.MinValue));
+            _processingStates.Add(projector.Id, new ProjectorProcessingState(DateTimeOffset.MinValue, 0));
         }
         return Task.CompletedTask;
     }

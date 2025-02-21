@@ -72,14 +72,14 @@ public class ProjectionManager
                 {
                     await ApplyEvents(projector, currentState, events);
 
-                    var newState = new ProjectorProcessingState(DateTimeOffset.UtcNow);
+                    var newState = new ProjectorProcessingState(DateTimeOffset.UtcNow, events.Last().SequenceNumber);
                     await _projectorStateStore.SaveProcessingState(projector, newState);
                 }
             }
             catch (Exception ex)
             {
-                var error = new ProjectorProcessingError(ex.Message, ex.StackTrace ?? "", currentState.ProcessingError?.ProcessingAttempts ?? 1, DateTimeOffset.Now);
-                var newState = new ProjectorProcessingState(currentState.LatestSuccessfulProcessingTime, error);
+                var error = new ProjectorProcessingError(ex.Message, ex.StackTrace ?? "", currentState.ProcessingError?.ProcessingAttempts ?? 1, DateTimeOffset.UtcNow);
+                var newState = new ProjectorProcessingState(currentState.LatestSuccessfulProcessingTime, currentState.ConfirmedSequenceNumber, error);
                 await _projectorStateStore.SaveProcessingState(projector, newState);
             }
         }

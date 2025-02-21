@@ -1,5 +1,4 @@
-﻿using System.Data;
-using System.Text.Json;
+﻿using System.Text.Json;
 using Basses.SimpleEventStore.EventStore;
 using Npgsql;
 using NpgsqlTypes;
@@ -9,20 +8,26 @@ namespace Basses.SimpleEventStore.PostgreSql;
 public class PostgreSqlEventStore : IEventStore, IDisposable
 {
     private readonly NpgsqlConnection _connection;
+    private readonly string _schema;
     private readonly string _eventStoreName;
     private Func<Task>? _onEventsAppended;
 
-    public PostgreSqlEventStore(string connectionString, string eventStoreName)
+    public PostgreSqlEventStore(string connectionString, string schema, string tableName)
     {
-        _eventStoreName = eventStoreName;
+        _schema = schema;
+        _eventStoreName = tableName;
+
+        PostgreSqlHelper.EnsureDatabase(connectionString);
 
         _connection = new NpgsqlConnection(connectionString);
         _connection.Open();
+
+        CreateEventStoreTableIfNotExists();
     }
 
     public async Task AppendEvents(Guid streamId, int version, IEnumerable<object> events)
     {
-        var sql = $@"INSERT INTO {_eventStoreName} (stream_id, version, timestamp, event_type, event) " +
+        var sql = $@"INSERT INTO {_schema}.{_eventStoreName} (stream_id, version, timestamp, event_type, event) " +
                         "VALUES(@streamId, @version, @timestamp, @eventType, @eventJson)";
 
         try
@@ -63,7 +68,7 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
 
     public async Task<long> GetHeadSequenceNumber()
     {
-        var sql = $"SELECT MAX(sequence_number) FROM {_eventStoreName}";
+        var sql = $"SELECT MAX(sequence_number) FROM {_schema}.{_eventStoreName}";
         long maxSequenceNumber = 0;
 
         try
@@ -88,7 +93,7 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
     public async Task<IEnumerable<EventEntry>> LoadEvents(Guid streamId)
     {
         var sql = $@"SELECT sequence_number, stream_id, version, timestamp, event_type, event 
-                        FROM {_eventStoreName} 
+                        FROM {_schema}.{_eventStoreName} 
                         WHERE stream_id = @streamId
                         ORDER BY sequence_number";
 
@@ -101,7 +106,7 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
     public async Task<IEnumerable<EventEntry>> LoadEvents(Guid streamId, long startSequenceNumber, int max)
     {
         var sql = $@"SELECT sequence_number, stream_id, version, timestamp, event_type, event 
-                        FROM {_eventStoreName} 
+                        FROM {_schema}.{_eventStoreName} 
                         WHERE stream_id = @streamId
                         AND sequence_number >= @startSequenceNumber
                         ORDER BY sequence_number
@@ -118,7 +123,7 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
     public async Task<IEnumerable<EventEntry>> LoadEvents(long startSequenceNumber, int max)
     {
         var sql = $@"SELECT sequence_number, stream_id, version, timestamp, event_type, event 
-                        FROM {_eventStoreName} 
+                        FROM {_schema}.{_eventStoreName} 
                         WHERE sequence_number >= @startSequenceNumber
                         ORDER BY sequence_number
                         LIMIT @max";
@@ -181,68 +186,18 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
         return @event;
     }
 
-    public static void CreateIfNotExist(string connectionString, string eventStoreName)
-    {
-        var connectionProperties = connectionString
-            .Split(';')
-            .Select(x => x.Trim())
-            .Where(x => !string.IsNullOrWhiteSpace(x))
-            .Select(x =>
-            {
-                var values = x.Split('=');
-                return new { Key = values[0], Value = values[1] };
-            });
-
-        var connectionPropertiesWithoutDatabase = connectionProperties
-            .Where(x => !x.Key.StartsWith("database", StringComparison.OrdinalIgnoreCase));
-
-        var connectionStringWithoutDatabase = string.Join(';', connectionPropertiesWithoutDatabase.Select(x => $"{x.Key}={x.Value}"));
-
-        var databaseName = connectionProperties
-            .Where(x => x.Key.StartsWith("database", StringComparison.OrdinalIgnoreCase))
-            .Select(x => x.Value)
-            .Single();
-
-        CreateDatabaseIfNotExists(connectionStringWithoutDatabase, databaseName);
-
-        CreateEventStoreTableIfNotExists(connectionString, eventStoreName);
-    }
-
-    private static void CreateDatabaseIfNotExists(string connectionString, string databaseName)
+    private void CreateEventStoreTableIfNotExists()
     {
         try
         {
-            using var connection = new NpgsqlConnection(connectionString);
-            connection.Open();
-            var sql1 = $"SELECT COUNT(*) FROM pg_database WHERE datname = '{databaseName}'";
+            using var transaction = _connection.BeginTransaction();
+
+            var sql1 = $"CREATE SCHEMA IF NOT EXISTS {_schema}";
             using var cmd1 = new NpgsqlCommand(sql1);
-            cmd1.Connection = connection;
-            var tableCount = (long)(cmd1.ExecuteScalar() ?? 0);
-            if (tableCount == 0)
-            {
-                var sql2 = $"CREATE DATABASE {databaseName}";
-                using var cmd2 = new NpgsqlCommand(sql2);
-                cmd2.Connection = connection;
-                cmd2.ExecuteNonQuery();
-            }
-            connection.Close();
-        }
-        catch (Exception ex)
-        {
-            throw new EventStoreException("Could not create database", ex);
-        }
-    }
+            cmd1.Connection = _connection;
+            cmd1.ExecuteNonQuery();
 
-    private static void CreateEventStoreTableIfNotExists(string connectionString, string eventStoreTableNames)
-    {
-        try
-        {
-            using var connection = new NpgsqlConnection(connectionString);
-            connection.Open();
-
-            using var transaction = connection.BeginTransaction();
-
-            var sql1 = $@"CREATE TABLE IF NOT EXISTS public.{eventStoreTableNames} (
+            var sql2 = $@"CREATE TABLE IF NOT EXISTS {_schema}.{_eventStoreName} (
                             sequence_number bigserial, 
                             stream_id uuid,
                             version integer,
@@ -250,24 +205,22 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
                             event_type varchar(200),
                             event jsonb,
                             PRIMARY KEY (sequence_number),
-                            CONSTRAINT {eventStoreTableNames}_unique_stream_version UNIQUE (stream_id, version)
+                            CONSTRAINT {_eventStoreName}_unique_stream_version UNIQUE (stream_id, version)
                         );";
-            using var cmd1 = new NpgsqlCommand(sql1);
-            cmd1.Connection = connection;
+            using var cmd2 = new NpgsqlCommand(sql2);
+            cmd1.Connection = _connection;
             cmd1.ExecuteNonQuery();
 
-            var sql2 = $@"CREATE INDEX IF NOT EXISTS {eventStoreTableNames}_index_stream_id ON public.{eventStoreTableNames}(stream_id);";
-            using var cmd2 = new NpgsqlCommand(sql2);
-            cmd2.Connection = connection;
+            var sql3 = $@"CREATE INDEX IF NOT EXISTS {_eventStoreName}_index_stream_id ON {_schema}.{_eventStoreName}(stream_id);";
+            using var cmd3 = new NpgsqlCommand(sql3);
+            cmd2.Connection = _connection;
             cmd2.ExecuteNonQuery();
 
             transaction.Commit();
-
-            connection.Close();
         }
         catch (Exception ex)
         {
-            throw new EventStoreException("Could not create database table", ex);
+            throw new EventStoreException("Could not create event store database table", ex);
         }
     }
 

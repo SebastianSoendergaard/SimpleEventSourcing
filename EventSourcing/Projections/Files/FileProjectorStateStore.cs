@@ -28,7 +28,7 @@ public class FileProjectorStateStore : IProjectorStateStore
         }
 
         var json = await File.ReadAllTextAsync(filename);
-        var state = JsonSerializer.Deserialize<ProjectorProcessingState>(json) ?? new ProjectorProcessingState(DateTimeOffset.MinValue);
+        var state = JsonSerializer.Deserialize<ProjectorProcessingState>(json) ?? new ProjectorProcessingState(DateTimeOffset.MinValue, 0);
 
         return state;
     }
@@ -47,7 +47,7 @@ public class FileProjectorStateStore : IProjectorStateStore
 
         if (existingFilename == null)
         {
-            var state = new ProjectorProcessingState(DateTimeOffset.MinValue);
+            var state = new ProjectorProcessingState(DateTimeOffset.MinValue, 0);
             var json = JsonSerializer.Serialize(state, _jsonOptions);
             await File.WriteAllTextAsync(newFilename, json);
             return;

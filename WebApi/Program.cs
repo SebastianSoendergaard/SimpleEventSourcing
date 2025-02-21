@@ -22,8 +22,7 @@ ISimpleObjectDb projectionDb = new SimplePostgreSqlObjectDb(projectionPostgresCo
 //var eventStore = new FileEventStore(directoryPath);
 
 var postgresConnectionString = "Server=localhost;Port=9002;User Id=postgres;Password=Passw0rd;Database=simple_event_sourcing;";
-PostgreSqlEventStore.CreateIfNotExist(postgresConnectionString, "event_store");
-PostgreSqlEventStore eventStore = new(postgresConnectionString, "event_store");
+var eventStore = new PostgreSqlEventStore(postgresConnectionString, "web_api", $"event_store");
 
 var projectorStateStore = new FileProjectorStateStore(@"c:/temp/eventstore/state");
 
