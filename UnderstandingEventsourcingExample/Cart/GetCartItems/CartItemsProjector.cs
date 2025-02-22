@@ -9,22 +9,13 @@ public class CartItemsProjector : Projector,
     IProjectionEventHandler<ItemRemovedEvent>,
     IProjectionEventHandler<CartClearedEvent>
 {
-    public static Guid ProjectorId = new("EF56C1F5-7AD5-463D-AB5C-CF873E7A06F7");
-
     private Guid? _cartId;
     private decimal _totalPrice = 0;
     private List<CartItem> _items = [];
 
-    public override Guid Id => ProjectorId;
-
     public CartItemsReadModel? GetReadModel()
     {
-        if (_cartId == null)
-        {
-            return null;
-        }
-
-        return new CartItemsReadModel(_cartId.Value, _totalPrice, _items);
+        return _cartId == null ? null : new CartItemsReadModel(_cartId.Value, _totalPrice, _items);
     }
 
     public Task UpdateWith(CartCreatedEvent @event, EventData eventData)

@@ -6,20 +6,20 @@ namespace UnderstandingEventsourcingExample.Cart.GetInventory;
 public sealed class GetInventoryProjectorRepository : IDisposable
 {
     private NpgsqlConnection _connection;
-    private readonly Guid _projectorId;
+    private readonly string _projectorName;
     private readonly string _schema;
 
-    public GetInventoryProjectorRepository(Guid projectorId, string connectionString, string schema)
+    public GetInventoryProjectorRepository(string projectorName, string connectionString, string schema)
     {
         _connection = new NpgsqlConnection(connectionString);
         _connection.Open();
-        _projectorId = projectorId;
+        _projectorName = projectorName;
         _schema = schema;
     }
 
     public async Task<long> GetLastProcessedSequenceNumber()
     {
-        var sql = $"SELECT last_processed_sequence_number FROM {_schema}.read_model_projector_state WHERE projector_id = '{_projectorId}'";
+        var sql = $"SELECT last_processed_sequence_number FROM {_schema}.read_model_projector_state WHERE projector_name = '{_projectorName}'";
         long sequenceNumber = 0;
 
         try
@@ -73,9 +73,9 @@ public sealed class GetInventoryProjectorRepository : IDisposable
                         DO UPDATE SET
                             inventory = EXCLUDED.inventory;";
 
-        var sql2 = $@"INSERT INTO {_schema}.read_model_projector_state (projector_id, last_processed_sequence_number)
-                        VALUES (@projector_id, @last_processed_sequence_number)
-                        ON CONFLICT (projector_id)
+        var sql2 = $@"INSERT INTO {_schema}.read_model_projector_state (projector_name, last_processed_sequence_number)
+                        VALUES (@projector_name, @last_processed_sequence_number)
+                        ON CONFLICT (projector_name)
                         DO UPDATE SET
                             last_processed_sequence_number = EXCLUDED.last_processed_sequence_number;";
 
@@ -95,7 +95,7 @@ public sealed class GetInventoryProjectorRepository : IDisposable
 
             using var cmd2 = new NpgsqlCommand(sql2);
             cmd2.Connection = _connection;
-            cmd2.Parameters.AddWithValue("projector_id", _projectorId);
+            cmd2.Parameters.AddWithValue("projector_name", _projectorName);
             cmd2.Parameters.AddWithValue("last_processed_sequence_number", sequenceNumber);
 
             await cmd2.ExecuteNonQueryAsync();

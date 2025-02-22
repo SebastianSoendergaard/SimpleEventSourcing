@@ -6,23 +6,7 @@ public class UserProjector : Projector,
     IProjectionEventHandler<UserCreated>,
     IProjectionEventHandler<UserNameChanged>
 {
-    public static Guid ProjectorId = new("74D64DD5-B86B-4B0B-908A-361FC0AAF1D0");
-
     private readonly IDictionary<Guid, UserProjection> _userProjections = new Dictionary<Guid, UserProjection>();
-    private long _sequenceNumber = 0;
-
-    public override Guid Id => ProjectorId;
-
-    protected override Task<long> GetSequenceNumber()
-    {
-        return Task.FromResult(_sequenceNumber);
-    }
-
-    protected override Task UpdateComplete(long sequenceNumber)
-    {
-        _sequenceNumber = sequenceNumber;
-        return Task.CompletedTask;
-    }
 
     public UserProjection GetProjection(Guid userId)
     {

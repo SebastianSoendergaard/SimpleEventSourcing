@@ -5,11 +5,9 @@ namespace Basses.SimpleEventStore.Enablers;
 
 public abstract class Projector : IProjector
 {
-    public abstract Guid Id { get; }
-
-    public string Name => GetType().Name;
-
     private long _sequenceNumber = 0;
+
+    public virtual string Name => GetType().Name;
 
     public async Task Update(IEnumerable<EventEntry> events)
     {

@@ -7,17 +7,13 @@ namespace UnderstandingEventsourcingExample.Cart.GetInventory;
 public class GetInventoryProjector : Projector,
     IProjectionEventHandler<InventoryChangedEvent>
 {
-    public static Guid ProjectorId = new("917BD624-66D0-4CFA-A917-C3B932F6CC88");
-
     private GetInventoryProjectorRepository _repository;
     private List<InventoryReadModel> _inventories = [];
 
     public GetInventoryProjector(IOptions<CartOptions> options)
     {
-        _repository = new GetInventoryProjectorRepository(ProjectorId, options.Value.ConnectionString, options.Value.Schema);
+        _repository = new GetInventoryProjectorRepository(Name, options.Value.ConnectionString, options.Value.Schema);
     }
-
-    public override Guid Id => ProjectorId;
 
     public Task<InventoryReadModel> GetReadModel(Guid ProductId)
     {

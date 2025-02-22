@@ -24,7 +24,7 @@ public class FileProjectorStateStore : IProjectorStateStore
 
         if (!File.Exists(filename))
         {
-            throw new NotFoundException($"Projector state not found, ID: {projector.Id}, Name: {projector.Name}");
+            throw new NotFoundException($"Projector state not found, Name: {projector.Name}");
         }
 
         var json = await File.ReadAllTextAsync(filename);
@@ -42,7 +42,7 @@ public class FileProjectorStateStore : IProjectorStateStore
 
     public async Task UpsertProjector(IProjector projector)
     {
-        var existingFilename = Directory.EnumerateFiles(_fileDirectoryPath).FirstOrDefault(f => f.Contains(projector.Id.ToString()));
+        var existingFilename = Directory.EnumerateFiles(_fileDirectoryPath).FirstOrDefault(f => f.Contains(projector.Name));
         var newFilename = GenerateFilename(projector);
 
         if (existingFilename == null)
@@ -63,7 +63,7 @@ public class FileProjectorStateStore : IProjectorStateStore
 
     private string GenerateFilename(IProjector projector)
     {
-        var filename = $"{projector.Id}_{projector.Name}.json".Replace(' ', '-');
+        var filename = $"{projector.Name}.json".Replace(' ', '-');
         return Path.Combine(_fileDirectoryPath, filename);
     }
 }
