@@ -51,7 +51,7 @@ public class GetCartItemsTests
         var query = new GetCartItemsQuery(cartId);
 
         await QueryValidator
-            .Setup(_eventStore, cartId)
+            .Setup(_eventStore, cartId.ToString())
             .Given(givenEvents)
             .Then<CartItemsReadModel>(
                 async () => await _handler.Handle(query),
@@ -71,7 +71,7 @@ public class GetCartItemsTests
         var query = new GetCartItemsQuery(cartId);
 
         await QueryValidator
-            .Setup(_eventStore, cartId)
+            .Setup(_eventStore, cartId.ToString())
             .Given(givenEvents)
             .Then<CartException>(async () => await _handler.Handle(query));
     }

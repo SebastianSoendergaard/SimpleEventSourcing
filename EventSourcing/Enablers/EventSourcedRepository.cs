@@ -25,7 +25,7 @@ public abstract class EventSourcedRepository<T> where T : Aggregate
         aggregate.ClearDomainEvents();
     }
 
-    public async Task<T?> TryGet(Guid aggregateId)
+    public async Task<T?> TryGet(string aggregateId)
     {
         var eventEntries = await _eventStore.LoadEvents(aggregateId);
 

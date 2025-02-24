@@ -7,7 +7,7 @@ public abstract class Aggregate
     public IReadOnlyList<IDomainEvent> UncommitedDomainEvents => _uncommitedDomainEvents;
     public int Version { get; private set; }
 
-    public Guid Id { get; protected set; }
+    public string Id { get; protected set; }
 
     public Aggregate() { }
 

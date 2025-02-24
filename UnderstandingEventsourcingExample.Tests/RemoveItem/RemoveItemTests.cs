@@ -54,7 +54,7 @@ public class RemoveItemTests
         ];
 
         await CommandValidator
-            .Setup(_eventStore, cartId)
+            .Setup(_eventStore, cartId.ToString())
             .Given(givenEvents)
             .When(async () => await _handler.Handle(command))
             .Then(expectedEvents);
@@ -87,7 +87,7 @@ public class RemoveItemTests
         );
 
         await CommandValidator
-            .Setup(_eventStore, cartId)
+            .Setup(_eventStore, cartId.ToString())
             .Given(givenEvents)
             .When(async () => await _handler.Handle(command))
             .Then<CartException>();

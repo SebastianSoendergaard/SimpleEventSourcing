@@ -14,7 +14,7 @@ public class InMemoryEventStore : IEventStore
         _upcastManager = new UpcastManager(_eventSerializer);
     }
 
-    public async Task AppendEvents(Guid streamId, int version, IEnumerable<object> events)
+    public async Task AppendEvents(string streamId, int version, IEnumerable<object> events)
     {
         lock (_lock)
         {
@@ -51,7 +51,7 @@ public class InMemoryEventStore : IEventStore
         return Task.FromResult((long)_events.Count);
     }
 
-    public Task<IEnumerable<EventEntry>> LoadEvents(Guid streamId)
+    public Task<IEnumerable<EventEntry>> LoadEvents(string streamId)
     {
         var events = GetEvents()
             .Where(e => e.StreamId == streamId);
@@ -59,7 +59,7 @@ public class InMemoryEventStore : IEventStore
         return Task.FromResult(events);
     }
 
-    public Task<IEnumerable<EventEntry>> LoadEvents(Guid streamId, long startSequenceNumber, int max)
+    public Task<IEnumerable<EventEntry>> LoadEvents(string streamId, long startSequenceNumber, int max)
     {
         var events = GetEvents()
             .Where(e => e.SequenceNumber >= startSequenceNumber)

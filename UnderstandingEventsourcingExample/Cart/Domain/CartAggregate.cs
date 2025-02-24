@@ -25,7 +25,7 @@ public class CartAggregate : Aggregate,
         }
 
         Apply(new ItemAddedEventV2(
-            Id,
+            new Guid(Id),
             description,
             image,
             price,
@@ -42,17 +42,17 @@ public class CartAggregate : Aggregate,
             throw new CartException($"Item {itemId} not in the Cart");
         }
 
-        Apply(new ItemRemovedEvent(Id, itemId));
+        Apply(new ItemRemovedEvent(new Guid(Id), itemId));
     }
 
     public void Clear()
     {
-        Apply(new CartClearedEvent(Id));
+        Apply(new CartClearedEvent(new Guid(Id)));
     }
 
     public void On(CartCreatedEvent @event)
     {
-        Id = @event.CartId;
+        Id = @event.CartId.ToString();
     }
 
     public void On(ItemAddedEventV2 @event)

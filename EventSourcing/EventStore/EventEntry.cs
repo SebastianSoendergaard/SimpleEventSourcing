@@ -1,7 +1,7 @@
 ﻿namespace Basses.SimpleEventStore.EventStore;
 
 public record EventEntry(
-    long SequenceNumber,
+    string SequenceNumber,
     Guid StreamId,
     int Version,
     DateTimeOffset Timestamp,

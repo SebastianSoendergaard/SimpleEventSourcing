@@ -16,7 +16,7 @@ public class AddItemCommandHandler(CartRepository repository, IDeviceFingerPrint
 {
     public async Task Handle(AddItemCommand command)
     {
-        var cart = await repository.TryGet(command.CartId);
+        var cart = await repository.TryGet(command.CartId.ToString());
         if (cart == null)
         {
             cart = new CartAggregate(command.CartId);

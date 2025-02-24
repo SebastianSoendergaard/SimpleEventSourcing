@@ -23,7 +23,7 @@ public class FileEventStore : IEventStore
         Directory.CreateDirectory(_fileDirectoryPath);
     }
 
-    public async Task AppendEvents(Guid streamId, int version, IEnumerable<object> events)
+    public async Task AppendEvents(string streamId, int version, IEnumerable<object> events)
     {
         lock (_lock)
         {
@@ -70,7 +70,7 @@ public class FileEventStore : IEventStore
         return Task.FromResult(head);
     }
 
-    public Task<IEnumerable<EventEntry>> LoadEvents(Guid streamId)
+    public Task<IEnumerable<EventEntry>> LoadEvents(string streamId)
     {
         var events = LoadEventsFromFiles()
             .Where(x => x.StreamId == streamId);
@@ -78,7 +78,7 @@ public class FileEventStore : IEventStore
         return Task.FromResult(events);
     }
 
-    public Task<IEnumerable<EventEntry>> LoadEvents(Guid streamId, long startSequenceNumber, int max)
+    public Task<IEnumerable<EventEntry>> LoadEvents(string streamId, long startSequenceNumber, int max)
     {
         var events = LoadEventsFromFiles()
             .Where(x => x.StreamId == streamId && x.SequenceNumber >= startSequenceNumber)

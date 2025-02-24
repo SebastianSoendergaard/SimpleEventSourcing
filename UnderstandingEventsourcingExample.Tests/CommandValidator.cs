@@ -6,18 +6,18 @@ namespace UnderstandingEventsourcingExample.Tests;
 public class CommandValidator
 {
     private readonly IEventStore _eventStore;
-    private readonly Guid _streamId;
+    private readonly string _streamId;
     private int _version = 0;
 
     private Func<Task>? _commandExecution;
 
-    private CommandValidator(IEventStore eventStore, Guid streamId)
+    private CommandValidator(IEventStore eventStore, string streamId)
     {
         _eventStore = eventStore;
         _streamId = streamId;
     }
 
-    public static CommandValidator Setup(IEventStore eventStore, Guid streamId)
+    public static CommandValidator Setup(IEventStore eventStore, string streamId)
     {
         return new CommandValidator(eventStore, streamId);
     }

@@ -31,7 +31,7 @@ public class UserAggregate : Aggregate,
 
     public void On(UserCreated @event)
     {
-        Id = @event.Id;
+        Id = @event.Id.ToString();
     }
 
     public void On(UserNameChanged @event)

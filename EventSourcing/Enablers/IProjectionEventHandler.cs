@@ -5,5 +5,5 @@
         Task UpdateWith(T @event, EventData eventData);
     }
 
-    public record EventData(Guid StreamId, int Version, DateTimeOffset Timestamp);
+    public record EventData(string StreamId, int Version, DateTimeOffset Timestamp);
 }

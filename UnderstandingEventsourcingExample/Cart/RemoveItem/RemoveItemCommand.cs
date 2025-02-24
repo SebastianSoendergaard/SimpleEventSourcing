@@ -11,7 +11,7 @@ public class RemoveItemCommandHandler(CartRepository repository)
 {
     public async Task Handle(RemoveItemCommand command)
     {
-        var cart = await repository.TryGet(command.CartId);
+        var cart = await repository.TryGet(command.CartId.ToString());
         if (cart == null)
         {
             throw new CartException("Cart does not exist");

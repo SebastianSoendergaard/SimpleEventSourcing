@@ -50,7 +50,7 @@ public class ClearCartTests
         ];
 
         await CommandValidator
-            .Setup(_eventStore, cartId)
+            .Setup(_eventStore, cartId.ToString())
             .Given(givenEvents)
             .When(async () => await _handler.Handle(command))
             .Then(expectedEvents);

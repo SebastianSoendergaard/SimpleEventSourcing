@@ -11,7 +11,7 @@ public class GetCartItemsQueryHandler(IEventStore eventStore)
 {
     public async Task<CartItemsReadModel> Handle(GetCartItemsQuery query)
     {
-        var events = await eventStore.LoadEvents(query.CartId);
+        var events = await eventStore.LoadEvents(query.CartId.ToString());
 
         var projector = new CartItemsProjector();
         await projector.Update(events);

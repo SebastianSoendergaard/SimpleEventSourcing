@@ -58,7 +58,7 @@ public class AddItemTests
         ];
 
         await CommandValidator
-            .Setup(_eventStore, cartId)
+            .Setup(_eventStore, cartId.ToString())
             .Given(givenEvents)
             .When(async () => await _handler.Handle(command))
             .Then(expectedEvents);
@@ -108,7 +108,7 @@ public class AddItemTests
         ];
 
         await CommandValidator
-            .Setup(_eventStore, cartId)
+            .Setup(_eventStore, cartId.ToString())
             .Given(givenEvents)
             .When(async () => await _handler.Handle(command))
             .Then(expectedEvents);
@@ -160,7 +160,7 @@ public class AddItemTests
         );
 
         await CommandValidator
-            .Setup(_eventStore, cartId)
+            .Setup(_eventStore, cartId.ToString())
             .Given(givenEvents)
             .When(async () => await _handler.Handle(command))
             .Then<CartException>();

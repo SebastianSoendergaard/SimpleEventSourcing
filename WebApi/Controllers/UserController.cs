@@ -19,13 +19,13 @@ public class UserController : ControllerBase
     {
         UserAggregate user = new();
         await _repository.Add(user);
-        return user.Id;
+        return new Guid(user.Id);
     }
 
     [HttpPost("UpdateName/{id:guid}/{name:alpha}")]
     public async Task UpdateName(Guid id, string name)
     {
-        var user = await _repository.TryGet(id);
+        var user = await _repository.TryGet(id.ToString());
         if (user == null)
         {
             throw new Exception("Not found");
@@ -41,20 +41,20 @@ public class UserController : ControllerBase
         UserAggregate user = new();
         user.SetName(name);
         await _repository.Add(user);
-        return user.Id;
+        return new Guid(user.Id);
     }
 
     [HttpGet("Get/{id:guid}")]
     public async Task<UserDto> Get(Guid id)
     {
-        var user = await _repository.TryGet(id);
+        var user = await _repository.TryGet(id.ToString());
         if (user == null)
         {
             throw new Exception("Not found");
         }
         UserDto userDto = new()
         {
-            Id = user.Id,
+            Id = new Guid(user.Id),
             Name = user.Name,
         };
         return userDto;

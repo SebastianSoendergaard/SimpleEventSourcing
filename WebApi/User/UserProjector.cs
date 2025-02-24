@@ -29,7 +29,7 @@ public class UserProjector : Projector,
 
     public Task UpdateWith(UserNameChanged @event, EventData eventData)
     {
-        var userProjection = _userProjections[eventData.StreamId];
+        var userProjection = _userProjections[new Guid(eventData.StreamId)];
         userProjection.Name = @event.Name;
         userProjection.Version = eventData.Version;
         userProjection.LastUpdated = eventData.Timestamp;

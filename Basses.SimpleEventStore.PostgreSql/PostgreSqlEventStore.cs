@@ -28,7 +28,7 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
         CreateEventStoreTableIfNotExists();
     }
 
-    public async Task AppendEvents(Guid streamId, int version, IEnumerable<object> events)
+    public async Task AppendEvents(string streamId, int version, IEnumerable<object> events)
     {
         var sql = $@"INSERT INTO {_schema}.{_eventStoreName} (stream_id, version, timestamp, event_type, event) " +
                         "VALUES(@streamId, @version, @timestamp, @eventType, @eventJson)";
@@ -93,7 +93,7 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
         }
     }
 
-    public async Task<IEnumerable<EventEntry>> LoadEvents(Guid streamId)
+    public async Task<IEnumerable<EventEntry>> LoadEvents(string streamId)
     {
         var sql = $@"SELECT sequence_number, stream_id, version, timestamp, event_type, event 
                         FROM {_schema}.{_eventStoreName} 
@@ -106,7 +106,7 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
         return await LoadEventsFromDatabase(cmd);
     }
 
-    public async Task<IEnumerable<EventEntry>> LoadEvents(Guid streamId, long startSequenceNumber, int max)
+    public async Task<IEnumerable<EventEntry>> LoadEvents(string streamId, long startSequenceNumber, int max)
     {
         var sql = $@"SELECT sequence_number, stream_id, version, timestamp, event_type, event 
                         FROM {_schema}.{_eventStoreName} 
@@ -155,7 +155,7 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
 
                 var eventEntry = new EventEntry(
                     reader.GetInt64(0),
-                    reader.GetGuid(1),
+                    reader.GetString(1),
                     reader.GetInt32(2),
                     reader.GetFieldValue<DateTimeOffset>(3),
                     @event.GetType().AssemblyQualifiedName ?? "",
@@ -186,7 +186,7 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
 
             var sql2 = $@"CREATE TABLE IF NOT EXISTS {_schema}.{_eventStoreName} (
                             sequence_number bigserial, 
-                            stream_id uuid,
+                            stream_id varchar(100),
                             version integer,
                             timestamp timestamptz,
                             event_type varchar(200),

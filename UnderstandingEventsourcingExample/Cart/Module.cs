@@ -68,6 +68,6 @@ public static class Module
         app.MapPost("/api/inventories/change-inventory/v1", async ([FromServices] ChangeInventoryCommandHandler handler, [FromBody] ChangeInventoryCommand cmd) => await handler.Handle(cmd));
         app.MapGet("/api/inventories/get-inventory/v1", async ([FromServices] GetInventoryQueryHandler handler, [FromQuery] Guid productId) => await handler.Handle(new GetInventoryQuery(productId)));
 
-        app.MapGet("/api/support/get-events/v1", async ([FromServices] IEventStore eventStore, [FromQuery] Guid aggregateId) => await eventStore.LoadEvents(aggregateId));
+        app.MapGet("/api/support/get-events/v1", async ([FromServices] IEventStore eventStore, [FromQuery] string aggregateId) => await eventStore.LoadEvents(aggregateId));
     }
 }

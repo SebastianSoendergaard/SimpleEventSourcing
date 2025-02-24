@@ -22,7 +22,7 @@ public class SupportController : ControllerBase
     [HttpGet("GetStreamEvents/{streamId:guid}")]
     public async Task<object> GetStreamEvents(Guid streamId)
     {
-        var events = await _eventStore.LoadEvents(streamId);
+        var events = await _eventStore.LoadEvents(streamId.ToString());
         return events;
     }
 

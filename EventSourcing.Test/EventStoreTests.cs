@@ -22,7 +22,7 @@ public sealed class EventStoreTests
     {
         var eventStore = eventStoreFactory();
 
-        var streamId = Guid.NewGuid();
+        var streamId = Guid.NewGuid().ToString();
         var @event = new CreatedEvent(1, "abc");
 
         await eventStore.AppendEvents(streamId, 1, new[] { @event });
@@ -38,7 +38,7 @@ public sealed class EventStoreTests
     {
         var eventStore = eventStoreFactory();
 
-        var streamId = Guid.NewGuid();
+        var streamId = Guid.NewGuid().ToString();
         var event1 = new CreatedEvent(1, "abc");
         var event2 = new UpdatedEvent(1, "cba");
         var event3 = new RemovedEvent(1);
@@ -56,15 +56,15 @@ public sealed class EventStoreTests
     {
         var eventStore = eventStoreFactory();
 
-        var streamId1 = Guid.NewGuid();
+        var streamId1 = Guid.NewGuid().ToString();
         var event1 = new CreatedEvent(1, "abc");
         await eventStore.AppendEvents(streamId1, 1, new object[] { event1 });
 
-        var streamId2 = Guid.NewGuid();
+        var streamId2 = Guid.NewGuid().ToString();
         var event2 = new CreatedEvent(2, "abc");
         await eventStore.AppendEvents(streamId2, 1, new object[] { event2 });
 
-        var streamId3 = Guid.NewGuid();
+        var streamId3 = Guid.NewGuid().ToString();
         var event3 = new CreatedEvent(3, "abc");
         await eventStore.AppendEvents(streamId3, 1, new object[] { event3 });
 
@@ -79,7 +79,7 @@ public sealed class EventStoreTests
     {
         var eventStore = eventStoreFactory();
 
-        var streamId = Guid.NewGuid();
+        var streamId = Guid.NewGuid().ToString();
         var event1 = new CreatedEvent(1, "abc");
         var event2 = new UpdatedEvent(1, "cba");
         var event3 = new RemovedEvent(1);

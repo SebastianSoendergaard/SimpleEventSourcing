@@ -39,7 +39,7 @@ public class ChangeInventoryTests
         ];
 
         await CommandValidator
-            .Setup(_eventStore, productId)
+            .Setup(_eventStore, productId.ToString())
             .Given(givenEvents)
             .When(async () => await _handler.Handle(command))
             .Then(expectedEvents);

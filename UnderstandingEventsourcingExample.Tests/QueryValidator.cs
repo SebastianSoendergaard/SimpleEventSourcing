@@ -6,18 +6,18 @@ namespace UnderstandingEventsourcingExample.Tests;
 public class QueryValidator
 {
     private readonly IEventStore _eventStore;
-    private readonly Guid _streamId;
+    private readonly string _streamId;
     private readonly Projector? _projector;
     private int _version = 0;
 
-    private QueryValidator(IEventStore eventStore, Guid streamId, Projector? projector = null)
+    private QueryValidator(IEventStore eventStore, string streamId, Projector? projector = null)
     {
         _eventStore = eventStore;
         _streamId = streamId;
         _projector = projector;
     }
 
-    public static QueryValidator Setup(IEventStore eventStore, Guid streamId)
+    public static QueryValidator Setup(IEventStore eventStore, string streamId)
     {
         return new QueryValidator(eventStore, streamId);
     }

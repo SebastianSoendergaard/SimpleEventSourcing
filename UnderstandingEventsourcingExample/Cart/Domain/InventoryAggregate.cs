@@ -14,11 +14,11 @@ public class InventoryAggregate : Aggregate,
 
     public void Update(int inventory)
     {
-        Apply(new InventoryChangedEvent(Id, inventory));
+        Apply(new InventoryChangedEvent(new Guid(Id), inventory));
     }
 
     public void On(InventoryChangedEvent @event)
     {
-        Id = @event.ProductId;
+        Id = @event.ProductId.ToString();
     }
 }

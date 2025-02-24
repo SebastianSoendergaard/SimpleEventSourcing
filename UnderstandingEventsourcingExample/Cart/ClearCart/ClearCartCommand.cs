@@ -10,7 +10,7 @@ public class ClearCartCommandHandler(CartRepository repository)
 {
     public async Task Handle(ClearCartCommand command)
     {
-        var cart = await repository.TryGet(command.CartId);
+        var cart = await repository.TryGet(command.CartId.ToString());
         if (cart == null)
         {
             throw new CartException("Cart does not exist");
