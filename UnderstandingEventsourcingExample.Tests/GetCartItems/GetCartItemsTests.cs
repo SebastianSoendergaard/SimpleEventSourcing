@@ -3,6 +3,7 @@ using Basses.SimpleEventStore.Enablers;
 using Basses.SimpleEventStore.EventStore;
 using Basses.SimpleEventStore.EventStore.InMemory;
 using UnderstandingEventsourcingExample.Cart.Domain;
+using UnderstandingEventsourcingExample.Cart.Domain.EventUpcast;
 using UnderstandingEventsourcingExample.Cart.GetCartItems;
 
 namespace UnderstandingEventsourcingExample.Tests.GetCartItems;
@@ -16,10 +17,12 @@ public class GetCartItemsTests
     public GetCartItemsTests()
     {
         _eventStore = new InMemoryEventStore();
+        _eventStore.RegisterUpcaster(new ItemAddedEventUpcaster());
         _handler = new GetCartItemsQueryHandler(_eventStore);
     }
 
     [Fact]
+    [Obsolete]
     public async Task ReturnsAllAddedItems()
     {
         var cartId = Guid.NewGuid();

@@ -4,6 +4,7 @@ using Basses.SimpleEventStore.EventStore;
 using Basses.SimpleEventStore.EventStore.InMemory;
 using UnderstandingEventsourcingExample.Cart.AddItem;
 using UnderstandingEventsourcingExample.Cart.Domain;
+using UnderstandingEventsourcingExample.Cart.Domain.EventUpcast;
 
 namespace UnderstandingEventsourcingExample.Tests.AddItem;
 
@@ -13,18 +14,22 @@ public class AddItemTests
     private IEventStore _eventStore;
     private CartRepository _repository;
     private AddItemCommandHandler _handler;
+    private FakeDeviceFingerPrintCalculator _fingerPrintCalculator;
 
     public AddItemTests()
     {
         _eventStore = new InMemoryEventStore();
+        _eventStore.RegisterUpcaster(new ItemAddedEventUpcaster());
         _repository = new CartRepository(_eventStore);
-        _handler = new AddItemCommandHandler(_repository);
+        _fingerPrintCalculator = new FakeDeviceFingerPrintCalculator();
+        _handler = new AddItemCommandHandler(_repository, _fingerPrintCalculator);
     }
 
     [Fact]
     public async Task CanAddItem()
     {
         var cartId = Guid.NewGuid();
+        _fingerPrintCalculator.FingerPrint = Guid.NewGuid().ToString();
 
         List<IDomainEvent> givenEvents = [];
 
@@ -41,13 +46,14 @@ public class AddItemTests
         List<IDomainEvent> expectedEvents =
         [
             new CartCreatedEvent(cartId),
-            new ItemAddedEvent(
+            new ItemAddedEventV2(
                 command.CartId,
                 command.Description,
                 command.Image,
                 command.Price,
                 command.ItemId,
-                command.ProductId
+                command.ProductId,
+                _fingerPrintCalculator.FingerPrint
             )
         ];
 
@@ -59,9 +65,11 @@ public class AddItemTests
     }
 
     [Fact]
+    [Obsolete]
     public async Task CanAddAdditionalItem()
     {
         var cartId = Guid.NewGuid();
+        _fingerPrintCalculator.FingerPrint = Guid.NewGuid().ToString();
 
         List<IDomainEvent> givenEvents =
         [
@@ -88,13 +96,14 @@ public class AddItemTests
 
         List<IDomainEvent> expectedEvents =
         [
-            new ItemAddedEvent(
+            new ItemAddedEventV2(
                 command.CartId,
                 command.Description,
                 command.Image,
                 command.Price,
                 command.ItemId,
-                command.ProductId
+                command.ProductId,
+                _fingerPrintCalculator.FingerPrint
             )
         ];
 
@@ -106,6 +115,7 @@ public class AddItemTests
     }
 
     [Fact]
+    [Obsolete]
     public async Task FailsWhenMoreThat3ItemsAreAdded()
     {
         var cartId = Guid.NewGuid();

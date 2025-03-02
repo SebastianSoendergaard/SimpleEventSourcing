@@ -7,17 +7,20 @@ public class FileEventStore : IEventStore
     private readonly string _fileDirectoryPath;
     private readonly JsonSerializerOptions _jsonOptions;
     private readonly object _lock = new();
+    private readonly UpcastManager _upcastManager;
     private Func<Task>? _onEventsAppended;
 
     public FileEventStore(string fileDirectoryPath)
     {
         _fileDirectoryPath = fileDirectoryPath;
-        Directory.CreateDirectory(_fileDirectoryPath);
+        _upcastManager = new UpcastManager(new DefaultEventSerializer());
 
         _jsonOptions = new JsonSerializerOptions
         {
             WriteIndented = true,
         };
+
+        Directory.CreateDirectory(_fileDirectoryPath);
     }
 
     public async Task AppendEvents(Guid streamId, int version, IEnumerable<object> events)
@@ -118,32 +121,22 @@ public class FileEventStore : IEventStore
     private EventEntry Deserialize(string json)
     {
         var entry = JsonSerializer.Deserialize<EventEntry>(json) ?? throw new EventStoreException($"Could not deserialize event entry: {json}");
-        var @event = DeserializeEvent(entry.EventType, (JsonElement)entry.Event);
+        var eventJson = ((JsonElement)entry.Event).GetRawText();
+
+        var @event = _upcastManager.Deserialize(eventJson, entry.EventType);
 
         return new EventEntry(
                     entry.SequenceNumber,
                     entry.StreamId,
                     entry.Version,
                     entry.Timestamp,
-                    entry.EventType,
+                    @event.GetType().AssemblyQualifiedName ?? "",
                     @event
                 );
     }
 
-    private object DeserializeEvent(string eventType, JsonElement eventElement)
+    public void RegisterUpcaster(IUpcaster upcaster)
     {
-        var type = Type.GetType(eventType);
-        if (type == null)
-        {
-            throw new EventStoreException($"Unknown event type: {eventType}");
-        }
-
-        var @event = JsonSerializer.Deserialize(eventElement, type);
-        if (@event == null)
-        {
-            throw new EventStoreException($"Deserialization failed for event type: {eventType}");
-        }
-
-        return @event;
+        _upcastManager.RegisterUpcaster(upcaster);
     }
 }
