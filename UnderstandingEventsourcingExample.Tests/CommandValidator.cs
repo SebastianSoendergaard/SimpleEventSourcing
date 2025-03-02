@@ -45,7 +45,7 @@ public class CommandValidator
         return Then(expectedEvents);
     }
 
-    public async Task Then(IEnumerable<IDomainEvent> expectedEvents)
+    public async Task Then(IEnumerable<IDomainEvent> expectedEvents, Action<IDomainEvent, IDomainEvent>? assert = null)
     {
         _commandExecution?.Invoke();
         var actualEvents = await _eventStore.LoadEvents(_streamId, _version + 1, int.MaxValue);
@@ -61,7 +61,14 @@ public class CommandValidator
             }
 
             var actualEvent = actualEvents.ToList()[index].Event;
-            Assert.Equal(expectedEvent, actualEvent);
+            if (assert == null)
+            {
+                Assert.Equal(expectedEvent, actualEvent);
+            }
+            else
+            {
+                assert(expectedEvent, (IDomainEvent)actualEvent);
+            }
         }
     }
 

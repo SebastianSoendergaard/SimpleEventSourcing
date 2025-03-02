@@ -31,6 +31,13 @@ public record InventoryChangedEvent(
     int Inventory
 ) : IDomainEvent;
 
+public record OrderedProduct(Guid ProductId, decimal Price);
+public record CartSubmittedEvent(
+    Guid CartId,
+    OrderedProduct[] OrderedProducts,
+    decimal TotalPrice
+) : IDomainEvent;
+
 #region [          DEPRECATED          ]
 
 [Obsolete]

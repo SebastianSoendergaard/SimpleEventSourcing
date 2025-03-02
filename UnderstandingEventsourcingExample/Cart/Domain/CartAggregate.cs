@@ -6,9 +6,12 @@ public class CartAggregate : Aggregate,
     IDomainEventHandler<CartCreatedEvent>,
     IDomainEventHandler<ItemAddedEventV2>,
     IDomainEventHandler<ItemRemovedEvent>,
-    IDomainEventHandler<CartClearedEvent>
+    IDomainEventHandler<CartClearedEvent>,
+    IDomainEventHandler<CartSubmittedEvent>
 {
     private Dictionary<Guid, Guid> _items = [];
+    private Dictionary<Guid, decimal> _productPrices = [];
+    private bool _isSubmitted = false;
 
     public CartAggregate(IEnumerable<IDomainEvent> events) : base(events) { }
 
@@ -50,6 +53,23 @@ public class CartAggregate : Aggregate,
         Apply(new CartClearedEvent(new Guid(Id)));
     }
 
+    public void Submit()
+    {
+        if (!_items.Any())
+        {
+            throw new CartException($"Can not submit empty cart");
+        }
+
+        if (_isSubmitted)
+        {
+            throw new CartException($"Can not submit cart twice");
+        }
+
+        var orderedProducts = _items.Select(x => new OrderedProduct(x.Value, _productPrices[x.Value])).ToArray();
+
+        Apply(new CartSubmittedEvent(new Guid(Id), orderedProducts, orderedProducts.Sum(x => x.Price)));
+    }
+
     public void On(CartCreatedEvent @event)
     {
         Id = @event.CartId.ToString();
@@ -58,6 +78,7 @@ public class CartAggregate : Aggregate,
     public void On(ItemAddedEventV2 @event)
     {
         _items.Add(@event.ItemId, @event.ProductId);
+        _productPrices[@event.ProductId] = @event.Price;
     }
 
     public void On(ItemRemovedEvent @event)
@@ -68,5 +89,10 @@ public class CartAggregate : Aggregate,
     public void On(CartClearedEvent @event)
     {
         _items.Clear();
+    }
+
+    public void On(CartSubmittedEvent @event)
+    {
+        _isSubmitted = true;
     }
 }
