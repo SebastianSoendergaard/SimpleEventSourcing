@@ -8,7 +8,7 @@ public class CartAggregate : Aggregate,
     IDomainEventHandler<ItemRemovedEvent>,
     IDomainEventHandler<CartClearedEvent>
 {
-    private List<Guid> _items = [];
+    private Dictionary<Guid, Guid> _items = [];
 
     public CartAggregate(IEnumerable<IDomainEvent> events) : base(events) { }
 
@@ -37,7 +37,7 @@ public class CartAggregate : Aggregate,
 
     public void RemoveItem(Guid itemId)
     {
-        if (!_items.Contains(itemId))
+        if (!_items.Keys.Contains(itemId))
         {
             throw new CartException($"Item {itemId} not in the Cart");
         }
@@ -57,7 +57,7 @@ public class CartAggregate : Aggregate,
 
     public void On(ItemAddedEventV2 @event)
     {
-        _items.Add(@event.ItemId);
+        _items.Add(@event.ItemId, @event.ProductId);
     }
 
     public void On(ItemRemovedEvent @event)
