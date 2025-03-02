@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using Basses.SimpleEventStore.EventStore;
+﻿using Basses.SimpleEventStore.EventStore;
 using Npgsql;
 using NpgsqlTypes;
 
@@ -10,12 +9,16 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
     private readonly NpgsqlConnection _connection;
     private readonly string _schema;
     private readonly string _eventStoreName;
+    private readonly IEventSerializer _serializer;
+    private readonly UpcastManager _upcastManager;
     private Func<Task>? _onEventsAppended;
 
-    public PostgreSqlEventStore(string connectionString, string schema, string tableName)
+    public PostgreSqlEventStore(string connectionString, string schema, string tableName, IEventSerializer? eventSerializer = null)
     {
         _schema = schema;
         _eventStoreName = tableName;
+        _serializer = eventSerializer ?? new DefaultEventSerializer();
+        _upcastManager = new UpcastManager(_serializer);
 
         PostgreSqlHelper.EnsureDatabase(connectionString);
 
@@ -36,15 +39,15 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
 
             foreach (var @event in events)
             {
-                var eventJson = JsonSerializer.Serialize(@event);
+                var serializedEvent = _serializer.Serialize(@event);
 
                 using var cmd = new NpgsqlCommand(sql);
                 cmd.Connection = _connection;
                 cmd.Parameters.AddWithValue("streamId", streamId);
                 cmd.Parameters.AddWithValue("version", version++);
                 cmd.Parameters.AddWithValue("timestamp", DateTimeOffset.UtcNow);
-                cmd.Parameters.AddWithValue("eventType", @event.GetType().AssemblyQualifiedName ?? "");
-                cmd.Parameters.AddWithValue("eventJson", NpgsqlDbType.Jsonb, eventJson);
+                cmd.Parameters.AddWithValue("eventType", serializedEvent.EventType);
+                cmd.Parameters.AddWithValue("eventJson", NpgsqlDbType.Jsonb, serializedEvent.EventPayload);
 
                 await cmd.ExecuteNonQueryAsync();
             }
@@ -147,14 +150,15 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
             {
                 var eventType = reader.GetString(4);
                 var eventJson = reader.GetString(5);
-                var @event = DeserializeEvent(eventType, eventJson);
+
+                var @event = _upcastManager.Deserialize(eventJson, eventType);
 
                 var eventEntry = new EventEntry(
                     reader.GetInt64(0),
                     reader.GetGuid(1),
                     reader.GetInt32(2),
                     reader.GetFieldValue<DateTimeOffset>(3),
-                    eventType,
+                    @event.GetType().AssemblyQualifiedName ?? "",
                     @event
                 );
 
@@ -167,23 +171,6 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
         }
 
         return events;
-    }
-
-    private object DeserializeEvent(string eventType, string eventJson)
-    {
-        var type = Type.GetType(eventType);
-        if (type == null)
-        {
-            throw new EventStoreException($"Unknown event type: {eventType}");
-        }
-
-        var @event = JsonSerializer.Deserialize(eventJson, type);
-        if (@event == null)
-        {
-            throw new EventStoreException($"Deserialization failed for event type: {eventType}");
-        }
-
-        return @event;
     }
 
     private void CreateEventStoreTableIfNotExists()
@@ -222,6 +209,11 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
         {
             throw new EventStoreException("Could not create event store database table", ex);
         }
+    }
+
+    public void RegisterUpcaster(IUpcaster upcaster)
+    {
+        _upcastManager.RegisterUpcaster(upcaster);
     }
 
     public void RegisterForEventsAppendedNotifications(Func<Task> onEventsAppended)
