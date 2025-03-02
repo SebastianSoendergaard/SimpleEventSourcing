@@ -1,17 +1,14 @@
 ﻿using Basses.SimpleEventStore.EventStore;
-using Basses.SimpleEventStore.Projections;
 
 namespace Basses.SimpleEventStore.Enablers;
 
 public abstract class EventSourcedRepository<T> where T : Aggregate
 {
     private readonly IEventStore _eventStore;
-    private readonly ProjectionManager _projectionManager;
 
-    public EventSourcedRepository(IEventStore eventStore, ProjectionManager projectionManager)
+    public EventSourcedRepository(IEventStore eventStore)
     {
         _eventStore = eventStore;
-        _projectionManager = projectionManager;
     }
 
     public async Task Add(T aggregate)
@@ -28,7 +25,7 @@ public abstract class EventSourcedRepository<T> where T : Aggregate
         aggregate.ClearDomainEvents();
     }
 
-    public async Task<T> Get(Guid aggregateId)
+    public async Task<T?> TryGet(Guid aggregateId)
     {
         var eventEntries = await _eventStore.LoadEvents(aggregateId);
 
@@ -36,6 +33,11 @@ public abstract class EventSourcedRepository<T> where T : Aggregate
             .Select(e => e.Event as IDomainEvent)
             .Where(e => e != null)
             .Select(e => e!);
+
+        if (!events.Any())
+        {
+            return null;
+        }
 
         var aggregate = Activator.CreateInstance(typeof(T), events);
 

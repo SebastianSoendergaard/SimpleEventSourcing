@@ -1,4 +1,4 @@
-using Basses.SimpleEventStore.EventStore;
+﻿using Basses.SimpleEventStore.EventStore;
 using Basses.SimpleEventStore.Projections;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,11 +10,13 @@ public class SupportController : ControllerBase
 {
     private readonly IEventStore _eventStore;
     private readonly ProjectionManager _projectionManager;
+    private readonly IServiceProvider _serviceProvider;
 
-    public SupportController(IEventStore eventStore, ProjectionManager projectionManager)
+    public SupportController(IEventStore eventStore, ProjectionManager projectionManager, IServiceProvider serviceProvider)
     {
         _eventStore = eventStore;
         _projectionManager = projectionManager;
+        _serviceProvider = serviceProvider;
     }
 
     [HttpGet("GetStreamEvents/{streamId:guid}")]
@@ -37,18 +39,19 @@ public class SupportController : ControllerBase
     [HttpGet("GetProjectors")]
     public async Task<object> GetProjectors()
     {
-        var projectors = _projectionManager.GetProjectors();
+        var projectorTypes = _projectionManager.GetProjectorTypes();
 
         var projectorStates = new List<object>();
 
-        foreach (var projector in projectors)
+        foreach (var projectorType in projectorTypes)
         {
-            var sequenceNumber = await projector.LoadSequenceNumber();
-            var processingState = await _projectionManager.GetProcessingState(projector.Id);
+            var projector = (IProjector)_serviceProvider.GetRequiredService(projectorType);
+
+            var sequenceNumber = await projector.GetSequenceNumber();
+            var processingState = await _projectionManager.GetProcessingState(projector);
 
             projectorStates.Add(new
             {
-                projector.Id,
                 projector.Name,
                 sequenceNumber,
                 processingState

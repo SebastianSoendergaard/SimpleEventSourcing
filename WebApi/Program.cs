@@ -3,36 +3,28 @@ using Basses.SimpleDocumentStore.PostgreSql;
 using Basses.SimpleEventStore.EventStore;
 using Basses.SimpleEventStore.PostgreSql;
 using Basses.SimpleEventStore.Projections;
-using Basses.SimpleEventStore.Projections.Files;
 using WebApi.User;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var connectionString = "Server=localhost;Port=9002;User Id=postgres;Password=Passw0rd;Database=simple_event_sourcing;";
 
 SimpleObjectDbConfiguration config = new();
-config.RegisterDataType<PersistedUserProjectorState>(i => i.Id);
-var projectionPostgresConnectionString = @"Server=localhost;Port=9002;User Id=postgres;Password=Passw0rd;Database=simple_object_db;";
-SimplePostgreSqlObjectDb.CreateIfNotExist(projectionPostgresConnectionString, config);
-ISimpleObjectDb projectionDb = new SimplePostgreSqlObjectDb(projectionPostgresConnectionString, config);
+config.RegisterDataType<PersistedUserProjectorState>(i => i.Name);
+SimplePostgreSqlObjectDb.CreateIfNotExist(connectionString, config);
+builder.Services.AddSingleton<ISimpleObjectDb>(x => new SimplePostgreSqlObjectDb(connectionString, config));
 
-// Add services to the container.
-//InmemoryEventStore eventStore = new();
+//builder.Services.AddSingleton<IEventStore>(x => new InMemoryEventStore());
+//builder.Services.AddSingleton<IEventStore>(x => new FileEventStore(@"c:/temp/eventstore"));
+builder.Services.AddSingleton<IEventStore>(x => new PostgreSqlEventStore(connectionString, "web_api", $"event_store"));
+//builder.Services.AddSingleton<IProjectorStateStore>(x => new InMemoryProjectorStateStore());
+//builder.Services.AddSingleton<IProjectorStateStore>(x => new FileProjectorStateStore(@"c:/temp/eventstore/state"));
+builder.Services.AddSingleton<IProjectorStateStore>(x => new PostgreSqlProjectorStateStore(connectionString, "web_api", $"event_store_projector_state"));
+builder.Services.AddSingleton<ProjectionManager>();
 
-//var directoryPath = @"c:/temp/eventstore";
-//var eventStore = new FileEventStore(directoryPath);
-
-var postgresConnectionString = "Server=localhost;Port=9002;User Id=postgres;Password=Passw0rd;Database=simple_event_sourcing;";
-var eventStore = new PostgreSqlEventStore(postgresConnectionString, "web_api", $"event_store");
-
-var projectorStateStore = new FileProjectorStateStore(@"c:/temp/eventstore/state");
-
-ProjectionManager projectionManager = new(eventStore, projectorStateStore, builder.Build().Services);
-projectionManager.RegisterSynchronousProjector(new UserProjector());
-projectionManager.RegisterAsynchronousProjector(new UserNameProjector());
-projectionManager.RegisterSynchronousProjector(new PersistedUserProjector(projectionDb));
-
-builder.Services.AddSingleton<IEventStore>(eventStore);
-builder.Services.AddSingleton(projectionManager);
+builder.Services.AddSingleton<UserProjector>();
+builder.Services.AddSingleton<UserNameProjector>();
+builder.Services.AddScoped<PersistedUserProjector>();
 
 builder.Services.AddScoped<UserRepository>();
 
@@ -41,8 +33,12 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
 var app = builder.Build();
+
+var projectionManager = app.Services.GetRequiredService<ProjectionManager>();
+projectionManager.RegisterSynchronousProjector<UserProjector>();
+projectionManager.RegisterSynchronousProjector<UserNameProjector>();
+projectionManager.RegisterSynchronousProjector<PersistedUserProjector>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

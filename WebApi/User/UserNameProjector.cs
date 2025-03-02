@@ -5,23 +5,7 @@ namespace WebApi.User;
 public class UserNameProjector : Projector,
     IProjectionEventHandler<UserNameChanged>
 {
-    public static Guid ProjectorId = new("325933F7-883B-4E9F-BBFE-F85A3EE4027B");
-
     private readonly List<UserNameProjection> _projections = [];
-    private long _sequenceNumber = 0;
-
-    public override Guid Id => ProjectorId;
-
-    protected override Task<long> GetSequenceNumber()
-    {
-        return Task.FromResult(_sequenceNumber);
-    }
-
-    protected override Task UpdateComplete(long sequenceNumber)
-    {
-        _sequenceNumber = sequenceNumber;
-        return Task.CompletedTask;
-    }
 
     public IEnumerable<UserNameProjection> GetProjection()
     {

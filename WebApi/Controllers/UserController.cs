@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using WebApi.User;
 
 namespace WebApi.Controllers;
@@ -25,7 +25,11 @@ public class UserController : ControllerBase
     [HttpPost("UpdateName/{id:guid}/{name:alpha}")]
     public async Task UpdateName(Guid id, string name)
     {
-        var user = await _repository.Get(id);
+        var user = await _repository.TryGet(id);
+        if (user == null)
+        {
+            throw new Exception("Not found");
+        }
         user.SetName(name);
         await _repository.Update(user);
     }
@@ -43,7 +47,11 @@ public class UserController : ControllerBase
     [HttpGet("Get/{id:guid}")]
     public async Task<UserDto> Get(Guid id)
     {
-        var user = await _repository.Get(id);
+        var user = await _repository.TryGet(id);
+        if (user == null)
+        {
+            throw new Exception("Not found");
+        }
         UserDto userDto = new()
         {
             Id = user.Id,

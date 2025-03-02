@@ -22,6 +22,7 @@ public abstract class Aggregate
 
     public void ClearDomainEvents()
     {
+        Version += _uncommitedDomainEvents.Count;
         _uncommitedDomainEvents.Clear();
     }
 

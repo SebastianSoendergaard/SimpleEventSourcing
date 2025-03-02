@@ -1,29 +1,28 @@
 ﻿using Basses.SimpleEventStore.Enablers;
 using Basses.SimpleEventStore.EventStore;
-using Basses.SimpleEventStore.Projections;
 
 namespace WebApi.User;
 
 public class UserRepository : EventSourcedRepository<UserAggregate>
 {
-    private readonly ProjectionManager _projectionManager;
+    private readonly UserProjector _userProjector;
+    private readonly UserNameProjector _userNameProjector;
 
-    public UserRepository(IEventStore eventStore, ProjectionManager projectionManager) : base(eventStore, projectionManager)
+    public UserRepository(IEventStore eventStore, UserProjector userProjector, UserNameProjector userNameProjector) : base(eventStore)
     {
-        _projectionManager = projectionManager;
+        _userProjector = userProjector;
+        _userNameProjector = userNameProjector;
     }
 
     public UserProjection GetUserProjection(Guid userId)
     {
-        var projector = _projectionManager.GetProjector<UserProjector>(UserProjector.ProjectorId);
-        var projection = projector.GetProjection(userId);
+        var projection = _userProjector.GetProjection(userId);
         return projection;
     }
 
     public IEnumerable<UserNameProjection> GetUserNameProjections()
     {
-        var projector = _projectionManager.GetProjector<UserNameProjector>(UserNameProjector.ProjectorId);
-        var projection = projector.GetProjection();
+        var projection = _userNameProjector.GetProjection();
         return projection;
     }
 }

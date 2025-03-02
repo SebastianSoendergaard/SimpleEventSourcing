@@ -26,7 +26,6 @@ public class PostgreSqlProjectorStateStore : IProjectorStateStore
     public async Task<ProjectorProcessingState> GetProcessingState(IProjector projector)
     {
         var sql = $@"SELECT 
-                        projector_id, 
                         latest_successful_processing_time, 
                         confirmed_sequence_number,
                         error_message, 
@@ -34,7 +33,7 @@ public class PostgreSqlProjectorStateStore : IProjectorStateStore
                         processing_attempts, 
                         latest_retry_time
                         FROM {_schema}.{_stateStoreName} 
-                        WHERE projector_id = '{projector.Id}'";
+                        WHERE projector_name=@projector_name";
 
         var state = new ProjectorProcessingState(DateTimeOffset.MinValue, 0);
 
@@ -42,21 +41,21 @@ public class PostgreSqlProjectorStateStore : IProjectorStateStore
         {
             using var cmd = new NpgsqlCommand(sql);
             cmd.Connection = _connection;
+            cmd.Parameters.AddWithValue("projector_name", projector.Name);
             using (var reader = await cmd.ExecuteReaderAsync())
             {
                 while (reader.Read())
                 {
-                    var projectorId = reader.GetGuid(0);
-                    var latestSuccessfulProcessingTime = reader.GetFieldValue<DateTimeOffset>(1);
-                    var confirmedSequenceNumber = reader.GetInt32(2);
+                    var latestSuccessfulProcessingTime = reader.GetFieldValue<DateTimeOffset>(0);
+                    var confirmedSequenceNumber = reader.GetInt32(1);
 
                     ProjectorProcessingError? error = null;
-                    if (!reader.IsDBNull(3))
+                    if (!reader.IsDBNull(2))
                     {
-                        var errorMessage = reader.GetString(3);
-                        var stackTrace = reader.GetString(4);
-                        var processingAttempts = reader.GetInt32(5);
-                        var latestRetryTime = reader.GetFieldValue<DateTimeOffset>(6);
+                        var errorMessage = reader.GetString(2);
+                        var stackTrace = reader.GetString(3);
+                        var processingAttempts = reader.GetInt32(4);
+                        var latestRetryTime = reader.GetFieldValue<DateTimeOffset>(5);
                         error = new ProjectorProcessingError(errorMessage, stackTrace, processingAttempts, latestRetryTime);
                     }
 
@@ -81,13 +80,13 @@ public class PostgreSqlProjectorStateStore : IProjectorStateStore
                             stacktrace=@stacktrace, 
                             processing_attempts=@attempts, 
                             latest_retry_time=@retry_time
-                        WHERE projector_id=@projector_id;";
+                        WHERE projector_name=@projector_name;";
 
         try
         {
             using var cmd1 = new NpgsqlCommand(sql);
             cmd1.Connection = _connection;
-            cmd1.Parameters.AddWithValue("projector_id", projector.Id);
+            cmd1.Parameters.AddWithValue("projector_name", projector.Name);
             cmd1.Parameters.AddWithValue("processing_time", state.LatestSuccessfulProcessingTime);
             cmd1.Parameters.AddWithValue("confirmed_sequence_number", state.ConfirmedSequenceNumber);
             cmd1.Parameters.AddWithValue("error_message", (object?)state.ProcessingError?.ErrorMessage ?? DBNull.Value);
@@ -105,16 +104,16 @@ public class PostgreSqlProjectorStateStore : IProjectorStateStore
 
     public async Task UpsertProjector(IProjector projector)
     {
-        var sql1 = $@"INSERT INTO {_schema}.{_stateStoreName} (projector_id, latest_successful_processing_time, confirmed_sequence_number)
-                        VALUES (@projector_id, @latest_successful_processing_time, @confirmed_sequence_number)
-                        ON CONFLICT (projector_id)
+        var sql1 = $@"INSERT INTO {_schema}.{_stateStoreName} (projector_name, latest_successful_processing_time, confirmed_sequence_number)
+                        VALUES (@projector_name, @latest_successful_processing_time, @confirmed_sequence_number)
+                        ON CONFLICT (projector_name)
                         DO NOTHING;";
 
         try
         {
             using var cmd1 = new NpgsqlCommand(sql1);
             cmd1.Connection = _connection;
-            cmd1.Parameters.AddWithValue("projector_id", projector.Id);
+            cmd1.Parameters.AddWithValue("projector_name", projector.Name);
             cmd1.Parameters.AddWithValue("latest_successful_processing_time", DateTimeOffset.MinValue);
             cmd1.Parameters.AddWithValue("confirmed_sequence_number", 0);
 
@@ -138,21 +137,21 @@ public class PostgreSqlProjectorStateStore : IProjectorStateStore
             cmd1.ExecuteNonQuery();
 
             var sql2 = $@"CREATE TABLE IF NOT EXISTS {_schema}.{_stateStoreName} (
-                            projector_id uuid,
+                            projector_name varchar(100),
                             latest_successful_processing_time timestamptz,
                             confirmed_sequence_number bigserial, 
                             error_message varchar(1000) NULL,
                             stacktrace varchar(10000) NULL,
                             processing_attempts integer NULL,
                             latest_retry_time timestamptz NULL,
-                            PRIMARY KEY (projector_id),
-                            CONSTRAINT {_stateStoreName}_unique_projector_id UNIQUE (projector_id)
+                            PRIMARY KEY (projector_name),
+                            CONSTRAINT {_stateStoreName}_unique_projector_name UNIQUE (projector_name)
                         );";
             using var cmd2 = new NpgsqlCommand(sql2);
             cmd2.Connection = _connection;
             cmd2.ExecuteNonQuery();
 
-            var sql3 = $@"CREATE INDEX IF NOT EXISTS {_stateStoreName}_index_projector_id ON {_schema}.{_stateStoreName}(projector_id);";
+            var sql3 = $@"CREATE INDEX IF NOT EXISTS {_stateStoreName}_index_projector_name ON {_schema}.{_stateStoreName}(projector_name);";
             using var cmd3 = new NpgsqlCommand(sql3);
             cmd3.Connection = _connection;
             cmd3.ExecuteNonQuery();
