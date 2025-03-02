@@ -105,7 +105,7 @@ public sealed class EventStoreTests
 
         eventStore.RegisterUpcaster(new CreatedEventUpcaster());
 
-        var streamId = Guid.NewGuid();
+        var streamId = Guid.NewGuid().ToString();
         var event1 = new CreatedEvent(1, "abc");
 
         await eventStore.AppendEvents(streamId, 1, new[] { event1 });
