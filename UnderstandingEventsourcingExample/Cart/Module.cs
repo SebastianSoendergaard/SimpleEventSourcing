@@ -6,6 +6,7 @@ using UnderstandingEventsourcingExample.Cart.AddItem;
 using UnderstandingEventsourcingExample.Cart.ChangeInventory;
 using UnderstandingEventsourcingExample.Cart.ClearCart;
 using UnderstandingEventsourcingExample.Cart.Domain;
+using UnderstandingEventsourcingExample.Cart.Domain.EventUpcast;
 using UnderstandingEventsourcingExample.Cart.GetCartItems;
 using UnderstandingEventsourcingExample.Cart.GetInventory;
 using UnderstandingEventsourcingExample.Cart.Migration;
@@ -41,11 +42,16 @@ public static class Module
         services.AddScoped<CartRepository>();
         services.AddScoped<InventoryRepository>();
 
+        services.AddScoped<IDeviceFingerPrintCalculator, DeviceFingerPrintCalculator>();
+
         return services;
     }
 
     public static void UseCartModule(this IHost host)
     {
+        var eventStore = host.Services.GetRequiredService<IEventStore>();
+        eventStore.RegisterUpcaster(new ItemAddedEventUpcaster());
+
         var projectionManager = host.Services.GetRequiredService<ProjectionManager>();
         projectionManager.RegisterSynchronousProjector<GetInventoryProjector>();
 

@@ -4,6 +4,7 @@ using Basses.SimpleEventStore.EventStore;
 using Basses.SimpleEventStore.EventStore.InMemory;
 using UnderstandingEventsourcingExample.Cart.ClearCart;
 using UnderstandingEventsourcingExample.Cart.Domain;
+using UnderstandingEventsourcingExample.Cart.Domain.EventUpcast;
 
 namespace UnderstandingEventsourcingExample.Tests.ClearCart;
 
@@ -17,11 +18,13 @@ public class ClearCartTests
     public ClearCartTests()
     {
         _eventStore = new InMemoryEventStore();
+        _eventStore.RegisterUpcaster(new ItemAddedEventUpcaster());
         _repository = new CartRepository(_eventStore);
         _handler = new ClearCartCommandHandler(_repository);
     }
 
     [Fact]
+    [Obsolete]
     public async Task CanClearCart()
     {
         var cartId = Guid.NewGuid();

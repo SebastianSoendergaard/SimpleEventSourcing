@@ -4,7 +4,7 @@ namespace UnderstandingEventsourcingExample.Cart.Domain;
 
 public class CartAggregate : Aggregate,
     IDomainEventHandler<CartCreatedEvent>,
-    IDomainEventHandler<ItemAddedEvent>,
+    IDomainEventHandler<ItemAddedEventV2>,
     IDomainEventHandler<ItemRemovedEvent>,
     IDomainEventHandler<CartClearedEvent>
 {
@@ -17,14 +17,22 @@ public class CartAggregate : Aggregate,
         Apply(new CartCreatedEvent(cartId));
     }
 
-    public void AddItem(string description, string image, decimal price, Guid itemId, Guid productId)
+    public void AddItem(string description, string image, decimal price, Guid itemId, Guid productId, IDeviceFingerPrintCalculator fingerPrintCalculator)
     {
         if (_items.Count >= 3)
         {
             throw new CartException("Can only add 3 items");
         }
 
-        Apply(new ItemAddedEvent(Id, description, image, price, itemId, productId));
+        Apply(new ItemAddedEventV2(
+            Id,
+            description,
+            image,
+            price,
+            itemId,
+            productId,
+            fingerPrintCalculator.GetFingerPrint()
+        ));
     }
 
     public void RemoveItem(Guid itemId)
@@ -47,7 +55,7 @@ public class CartAggregate : Aggregate,
         Id = @event.CartId;
     }
 
-    public void On(ItemAddedEvent @event)
+    public void On(ItemAddedEventV2 @event)
     {
         _items.Add(@event.ItemId);
     }

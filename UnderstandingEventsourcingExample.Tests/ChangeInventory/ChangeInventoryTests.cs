@@ -4,6 +4,7 @@ using Basses.SimpleEventStore.EventStore;
 using Basses.SimpleEventStore.EventStore.InMemory;
 using UnderstandingEventsourcingExample.Cart.ChangeInventory;
 using UnderstandingEventsourcingExample.Cart.Domain;
+using UnderstandingEventsourcingExample.Cart.Domain.EventUpcast;
 
 namespace UnderstandingEventsourcingExample.Tests.ChangeInventory;
 
@@ -17,6 +18,7 @@ public class ChangeInventoryTests
     public ChangeInventoryTests()
     {
         _eventStore = new InMemoryEventStore();
+        _eventStore.RegisterUpcaster(new ItemAddedEventUpcaster());
         _repository = new InventoryRepository(_eventStore);
         _handler = new ChangeInventoryCommandHandler(_repository);
     }

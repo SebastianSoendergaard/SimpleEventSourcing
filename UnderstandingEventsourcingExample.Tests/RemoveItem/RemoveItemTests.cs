@@ -3,6 +3,7 @@ using Basses.SimpleEventStore.Enablers;
 using Basses.SimpleEventStore.EventStore;
 using Basses.SimpleEventStore.EventStore.InMemory;
 using UnderstandingEventsourcingExample.Cart.Domain;
+using UnderstandingEventsourcingExample.Cart.Domain.EventUpcast;
 using UnderstandingEventsourcingExample.Cart.RemoveItem;
 
 namespace UnderstandingEventsourcingExample.Tests.RemoveItem;
@@ -17,11 +18,13 @@ public class RemoveItemTests
     public RemoveItemTests()
     {
         _eventStore = new InMemoryEventStore();
+        _eventStore.RegisterUpcaster(new ItemAddedEventUpcaster());
         _repository = new CartRepository(_eventStore);
         _handler = new RemoveItemCommandHandler(_repository);
     }
 
     [Fact]
+    [Obsolete]
     public async Task CanRemoveItem()
     {
         var cartId = Guid.NewGuid();
@@ -58,6 +61,7 @@ public class RemoveItemTests
     }
 
     [Fact]
+    [Obsolete]
     public async Task FailsWhenItemAlreadyRemoved()
     {
         var cartId = Guid.NewGuid();

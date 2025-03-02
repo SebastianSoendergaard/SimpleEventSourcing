@@ -5,7 +5,7 @@ namespace UnderstandingEventsourcingExample.Cart.GetCartItems;
 
 public class CartItemsProjector : Projector,
     IProjectionEventHandler<CartCreatedEvent>,
-    IProjectionEventHandler<ItemAddedEvent>,
+    IProjectionEventHandler<ItemAddedEventV2>,
     IProjectionEventHandler<ItemRemovedEvent>,
     IProjectionEventHandler<CartClearedEvent>
 {
@@ -24,7 +24,7 @@ public class CartItemsProjector : Projector,
         return Task.CompletedTask;
     }
 
-    public Task UpdateWith(ItemAddedEvent @event, EventData eventData)
+    public Task UpdateWith(ItemAddedEventV2 @event, EventData eventData)
     {
         var item = new CartItem(
             @event.CartId,

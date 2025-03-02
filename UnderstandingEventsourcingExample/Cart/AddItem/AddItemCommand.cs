@@ -12,7 +12,7 @@ public record AddItemCommand(
     Guid ProductId
 );
 
-public class AddItemCommandHandler(CartRepository repository)
+public class AddItemCommandHandler(CartRepository repository, IDeviceFingerPrintCalculator fingerPrintCalculator)
 {
     public async Task Handle(AddItemCommand command)
     {
@@ -23,7 +23,7 @@ public class AddItemCommandHandler(CartRepository repository)
             await repository.Add(cart);
         }
 
-        cart.AddItem(command.Description, command.Image, command.Price, command.ItemId, command.ProductId);
+        cart.AddItem(command.Description, command.Image, command.Price, command.ItemId, command.ProductId, fingerPrintCalculator);
         await repository.Update(cart);
     }
 }
