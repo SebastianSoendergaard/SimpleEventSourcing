@@ -31,6 +31,12 @@ public record InventoryChangedEvent(
     int Inventory
 ) : IDomainEvent;
 
+public record PriceChangedEvent(
+    Guid ProductId,
+    decimal NewPrice,
+    decimal OldPrice
+) : IDomainEvent;
+
 public record OrderedProduct(Guid ProductId, decimal Price);
 public record CartSubmittedEvent(
     Guid CartId,
