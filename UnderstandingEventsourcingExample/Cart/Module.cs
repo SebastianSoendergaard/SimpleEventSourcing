@@ -65,6 +65,11 @@ public static class Module
         var projectionManager = host.Services.GetRequiredService<ProjectionManager>();
         projectionManager.RegisterSynchronousProjector<GetInventoryProjector>();
 
+        var messageConsumer = host.Services.GetRequiredService<IMessageConsumer>();
+        messageConsumer.Subscribe<ExternalInventoryChangedEvent>("understand-es-test", nameof(ExternalInventoryChangedEvent), async e =>
+        {
+            await host.ExecuteScoped<ChangeInventoryCommandHandler>(handler => handler.Handle(new ChangeInventoryCommand(e.ProductId, e.Inventory)));
+        });
     }
 
     public static void RegisterCartModuleEndpoints(this WebApplication app)
@@ -75,7 +80,6 @@ public static class Module
         app.MapGet("/api/cart/get-items/v1", async ([FromServices] GetCartItemsQueryHandler handler, [FromQuery] Guid cartId) => await handler.Handle(new GetCartItemsQuery(cartId)));
         app.MapPost("/api/cart/submit-cart/v1", async ([FromServices] SubmitCartCommandHandler handler, [FromBody] SubmitCartCommand cmd) => await handler.Handle(cmd));
 
-        app.MapPost("/api/inventories/change-inventory/v1", async ([FromServices] ChangeInventoryCommandHandler handler, [FromBody] ChangeInventoryCommand cmd) => await handler.Handle(cmd));
         app.MapGet("/api/inventories/get-inventory/v1", async ([FromServices] GetInventoryQueryHandler handler, [FromQuery] Guid productId) => await handler.Handle(new GetInventoryQuery(productId)));
 
         app.MapPost("/api/prices/change-price/v1", async ([FromServices] ChangePriceCommandHandler handler, [FromBody] ChangePriceCommand cmd) => await handler.Handle(cmd));
@@ -110,5 +114,15 @@ public static class Module
 
             return projectorStates;
         });
+    }
+}
+
+internal static class Extentions
+{
+    public static async Task ExecuteScoped<T>(this IHost host, Func<T, Task> onExecute)
+    {
+        using var scope = host.Services.CreateScope();
+        var commandHandler = (T)scope.ServiceProvider.GetRequiredService(typeof(T));
+        await onExecute(commandHandler);
     }
 }
