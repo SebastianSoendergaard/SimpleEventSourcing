@@ -1,6 +1,6 @@
 ﻿using Npgsql;
 
-namespace UnderstandingEventsourcingExample.Cart.Migration;
+namespace UnderstandingEventsourcingExample.Cart.Infrastructure.Migration;
 
 public static class ReadModelMigrator
 {
@@ -12,21 +12,28 @@ public static class ReadModelMigrator
             "create_GetInventory_read_model.sql"
         };
 
-        using var connection = new NpgsqlConnection(connectionString);
-        connection.Open();
-
         try
         {
-            foreach (var script in scripts)
+            using var connection = new NpgsqlConnection(connectionString);
+            connection.Open();
+
+            try
             {
-                var sql = LoadFile(script);
-                using var cmd = new NpgsqlCommand(sql, connection);
-                cmd.ExecuteNonQuery();
+                foreach (var script in scripts)
+                {
+                    var sql = LoadFile(script);
+                    using var cmd = new NpgsqlCommand(sql, connection);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            finally
+            {
+                connection.Close();
             }
         }
-        finally
+        catch (Exception ex)
         {
-            connection.Close();
+            Console.WriteLine(ex.ToString());
         }
     }
 

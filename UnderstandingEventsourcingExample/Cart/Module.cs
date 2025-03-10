@@ -1,6 +1,8 @@
 ﻿using Basses.SimpleEventStore.EventStore;
 using Basses.SimpleEventStore.PostgreSql;
 using Basses.SimpleEventStore.Projections;
+using Basses.SimpleMessageBus;
+using Basses.SimpleMessageBus.Kafka;
 using Microsoft.AspNetCore.Mvc;
 using UnderstandingEventsourcingExample.Cart.AddItem;
 using UnderstandingEventsourcingExample.Cart.ChangeInventory;
@@ -9,7 +11,8 @@ using UnderstandingEventsourcingExample.Cart.Domain;
 using UnderstandingEventsourcingExample.Cart.Domain.EventUpcast;
 using UnderstandingEventsourcingExample.Cart.GetCartItems;
 using UnderstandingEventsourcingExample.Cart.GetInventory;
-using UnderstandingEventsourcingExample.Cart.Migration;
+using UnderstandingEventsourcingExample.Cart.Infrastructure.Kafka;
+using UnderstandingEventsourcingExample.Cart.Infrastructure.Migration;
 using UnderstandingEventsourcingExample.Cart.RemoveItem;
 
 namespace UnderstandingEventsourcingExample.Cart;
@@ -18,16 +21,22 @@ public static class Module
 {
     public static IServiceCollection AddCartModule(this IServiceCollection services, IConfiguration configuration)
     {
-        services.Configure<CartOptions>(configuration.GetSection("Cart"));
+        services.Configure<CartOptions>(configuration.GetSection("Cart:EventStore"));
+        services.Configure<KafkaOptions>(configuration.GetSection("Cart:Kafka"));
 
-        var connectionString = configuration.GetValue<string>("Cart:ConnectionString") ?? "";
-        var schema = configuration.GetValue<string>("Cart:Schema") ?? "";
-        var eventStoreName = configuration.GetValue<string>("Cart:EventStoreName") ?? "";
-        var projectorStateStoreName = configuration.GetValue<string>("Cart:ProjectorStateStoreName") ?? "";
+        var connectionString = configuration.GetValue<string>("Cart:EventStore:ConnectionString") ?? "";
+        var schema = configuration.GetValue<string>("Cart:EventStore:Schema") ?? "";
+        var eventStoreName = configuration.GetValue<string>("Cart:EventStore:EventStoreName") ?? "";
+        var projectorStateStoreName = configuration.GetValue<string>("Cart:EventStore:ProjectorStateStoreName") ?? "";
+
+        var kafkaServer = configuration.GetValue<string>("Cart:Kafka:Server") ?? "";
+        var kafkaClientId = configuration.GetValue<string>("Cart:Kafka:ClientId") ?? "";
 
         services.AddSingleton<IEventStore>(x => new PostgreSqlEventStore(connectionString, schema, eventStoreName));
         services.AddSingleton<IProjectorStateStore>(x => new PostgreSqlProjectorStateStore(connectionString, schema, projectorStateStoreName));
         services.AddSingleton<ProjectionManager>();
+
+        services.AddKafkaMessageBus();
 
         services.AddScoped<AddItemCommandHandler>();
         services.AddScoped<RemoveItemCommandHandler>();
@@ -56,7 +65,6 @@ public static class Module
         var projectionManager = host.Services.GetRequiredService<ProjectionManager>();
         projectionManager.RegisterSynchronousProjector<GetInventoryProjector>();
 
-        //projectionManager.Start();
     }
 
     public static void RegisterCartModuleEndpoints(this WebApplication app)

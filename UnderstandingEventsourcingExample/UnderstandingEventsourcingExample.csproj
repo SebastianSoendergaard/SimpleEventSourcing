@@ -9,13 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Cart\Migration\create_GetInventory_read_model.sql" />
-    <None Remove="Cart\Migration\create_read_model_projector_state.sql" />
+    <None Remove="Cart\Infrastructure\Migration\create_GetInventory_read_model.sql" />
+    <None Remove="Cart\Infrastructure\Migration\create_read_model_projector_state.sql" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Cart\Migration\create_GetInventory_read_model.sql" />
-    <EmbeddedResource Include="Cart\Migration\create_read_model_projector_state.sql" />
+    <EmbeddedResource Include="Cart\Infrastructure\Migration\create_GetInventory_read_model.sql" />
+    <EmbeddedResource Include="Cart\Infrastructure\Migration\create_read_model_projector_state.sql" />
   </ItemGroup>
 
   <ItemGroup>
@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Basses.SimpleEventStore.PostgreSql\Basses.SimpleEventStore.PostgreSql.csproj" />
+    <ProjectReference Include="..\Basses.SimpleMessageBus\Basses.SimpleMessageBus.csproj" />
   </ItemGroup>
 
 </Project>

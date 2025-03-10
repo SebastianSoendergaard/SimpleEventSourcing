@@ -1,0 +1,16 @@
+services:
+
+  postgres:
+    image: postgres:16
+    container_name: Understanding-Eventsourcing-Postgres
+    environment:
+      POSTGRES_PASSWORD: Passw0rd
+      POSTGRES_USER: postgres
+    ports:
+      - "9090:5432"
+
+  kafka:
+    image: apache/kafka:latest
+    container_name: Understanding-Eventsourcing-Kafka
+    ports:
+      - "9092:9092"
