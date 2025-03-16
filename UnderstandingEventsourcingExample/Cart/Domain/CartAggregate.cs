@@ -8,11 +8,15 @@ public class CartAggregate : Aggregate,
     IDomainEventHandler<ItemRemovedEvent>,
     IDomainEventHandler<ItemArchivedEvent>,
     IDomainEventHandler<CartClearedEvent>,
-    IDomainEventHandler<CartSubmittedEvent>
+    IDomainEventHandler<CartSubmittedEvent>,
+    IDomainEventHandler<CartPublishedEvent>,
+    IDomainEventHandler<CartPublicationFailedEvent>
 {
     private Dictionary<Guid, Guid> _items = [];
     private Dictionary<Guid, decimal> _productPrices = [];
     private bool _isSubmitted = false;
+    private bool _isPublished = false;
+    private bool _isPublicationFailed = false;
 
     public CartAggregate(IEnumerable<IDomainEvent> events) : base(events) { }
 
@@ -82,6 +86,26 @@ public class CartAggregate : Aggregate,
         Apply(new CartSubmittedEvent(new Guid(Id), orderedProducts, orderedProducts.Sum(x => x.Price)));
     }
 
+    public void Publish()
+    {
+        if (!_isSubmitted)
+        {
+            throw new CartException($"Can publish unsubmitted cart");
+        }
+
+        if (_isPublished)
+        {
+            throw new CartException($"Can not submit cart twice");
+        }
+
+        Apply(new CartPublishedEvent(new Guid(Id)));
+    }
+
+    public void FailPublication()
+    {
+        Apply(new CartPublicationFailedEvent(new Guid(Id)));
+    }
+
     public void On(CartCreatedEvent @event)
     {
         Id = @event.CartId.ToString();
@@ -111,5 +135,15 @@ public class CartAggregate : Aggregate,
     public void On(CartSubmittedEvent @event)
     {
         _isSubmitted = true;
+    }
+
+    public void On(CartPublishedEvent @event)
+    {
+        _isPublished = true;
+    }
+
+    public void On(CartPublicationFailedEvent @event)
+    {
+        _isPublicationFailed = true;
     }
 }

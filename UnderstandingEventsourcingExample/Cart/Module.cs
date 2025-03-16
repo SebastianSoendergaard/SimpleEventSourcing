@@ -74,11 +74,11 @@ public static class Module
         projectionManager.RegisterSynchronousProjector<GetCartsWithProductsProjector>();
 
         var messageConsumer = host.Services.GetRequiredService<IMessageConsumer>();
-        messageConsumer.Subscribe<ExternalInventoryChangedEvent>("understand-es-test", "inventory-changed", async e =>
+        messageConsumer.Subscribe<ExternalInventoryChangedEvent>("understand-eventsourcing-topic", "inventory-changed", async e =>
         {
             await host.ExecuteScoped<ChangeInventoryCommandHandler>(h => h.Handle(new ChangeInventoryCommand(e.ProductId, e.Inventory)));
         });
-        messageConsumer.Subscribe<ExternalPriceChangedEvent>("understand-es-test", "price-changed", async e =>
+        messageConsumer.Subscribe<ExternalPriceChangedEvent>("understand-eventsourcing-topic", "price-changed", async e =>
         {
             await host.ExecuteScoped<ChangePriceCommandHandler>(h => h.Handle(new ChangePriceCommand(e.ProductId, e.NewPrice, e.OldPrice)));
         });
@@ -95,8 +95,8 @@ public static class Module
         app.MapGet("/api/cart/get-inventory/v1", async ([FromServices] GetInventoryQueryHandler handler, [FromQuery] Guid productId) => await handler.Handle(new GetInventoryQuery(productId)));
         app.MapGet("/api/cart/get-cartswithproducts/v1", async ([FromServices] GetCartsWithProductsQueryHandler handler, [FromQuery] Guid productId) => await handler.Handle(new GetCartsWithProductsQuery(productId)));
 
-        app.MapPost("/api/external/change-inventory/v1", async ([FromServices] IMessageProducer messageProducer, [FromBody] ExternalInventoryChangedEvent e) => await messageProducer.SendMessage("understand-es-test", "inventory-changed", e));
-        app.MapPost("/api/external/change-price/v1", async ([FromServices] IMessageProducer messageProducer, [FromBody] ExternalPriceChangedEvent e) => await messageProducer.SendMessage("understand-es-test", "price-changed", e));
+        app.MapPost("/api/external/change-inventory/v1", async ([FromServices] IMessageProducer messageProducer, [FromBody] ExternalInventoryChangedEvent e) => await messageProducer.SendMessage("understand-eventsourcing-topic", "inventory-changed", e));
+        app.MapPost("/api/external/change-price/v1", async ([FromServices] IMessageProducer messageProducer, [FromBody] ExternalPriceChangedEvent e) => await messageProducer.SendMessage("understand-eventsourcing-topic", "price-changed", e));
 
         app.MapGet("/api/support/get-aggregate-events/v1", async ([FromServices] IEventStore eventStore, [FromQuery] string aggregateId) => await eventStore.LoadEvents(aggregateId));
         app.MapGet("/api/support/get-latest-events/v1", async ([FromServices] IEventStore eventStore, [FromQuery] int eventMaxCount) =>

@@ -31,6 +31,14 @@ public record CartClearedEvent(
     Guid CartId
 ) : IDomainEvent;
 
+public record CartPublishedEvent(
+    Guid CartId
+) : IDomainEvent;
+
+public record CartPublicationFailedEvent(
+    Guid CartId
+) : IDomainEvent;
+
 public record InventoryChangedEvent(
     Guid ProductId,
     int Inventory
