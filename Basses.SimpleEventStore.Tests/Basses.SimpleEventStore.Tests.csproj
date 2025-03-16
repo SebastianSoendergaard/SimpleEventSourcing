@@ -24,7 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Basses.SimpleEventStore.PostgreSql\Basses.SimpleEventStore.PostgreSql.csproj" />
-    <ProjectReference Include="..\EventSourcing\Basses.SimpleEventStore.csproj" />
+    <ProjectReference Include="..\Basses.SimpleEventStore\Basses.SimpleEventStore.csproj" />
   </ItemGroup>
 
 </Project>

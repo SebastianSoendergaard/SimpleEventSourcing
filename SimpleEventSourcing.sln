@@ -5,9 +5,9 @@ VisualStudioVersion = 17.8.34525.116
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebApi", "WebApi\WebApi.csproj", "{7B042CE5-2655-4E86-9219-4531038B314C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Basses.SimpleEventStore", "EventSourcing\Basses.SimpleEventStore.csproj", "{C073707F-7EAD-457C-AD3D-4B340B4ACFE0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Basses.SimpleEventStore", "Basses.SimpleEventStore\Basses.SimpleEventStore.csproj", "{C073707F-7EAD-457C-AD3D-4B340B4ACFE0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventSourcing.Test", "EventSourcing.Test\EventSourcing.Test.csproj", "{433B329B-6468-43B7-A39B-16C75A19470B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Basses.SimpleEventStore.Tests", "Basses.SimpleEventStore.Tests\Basses.SimpleEventStore.Tests.csproj", "{433B329B-6468-43B7-A39B-16C75A19470B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Basses.SimpleEventStore.PostgreSql", "Basses.SimpleEventStore.PostgreSql\Basses.SimpleEventStore.PostgreSql.csproj", "{1F35D5D7-B86E-42CB-B858-CA98ACB64539}"
 EndProject
