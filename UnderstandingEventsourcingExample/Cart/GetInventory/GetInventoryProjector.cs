@@ -5,24 +5,25 @@ using UnderstandingEventsourcingExample.Cart.Domain;
 namespace UnderstandingEventsourcingExample.Cart.GetInventory;
 
 public class GetInventoryProjector : Projector,
-    IProjectionEventHandler<InventoryChangedEvent>
+    IProjectionEventHandler<InventoryChangedEvent>, IDisposable
 {
-    private GetInventoryProjectorRepository _repository;
+    private GetInventoryProjectorRepository? _repository;
     private List<InventoryReadModel> _inventories = [];
+    private readonly IOptions<CartOptions> _options;
 
     public GetInventoryProjector(IOptions<CartOptions> options)
     {
-        _repository = new GetInventoryProjectorRepository(Name, options.Value.ConnectionString, options.Value.Schema);
+        _options = options;
     }
 
     public Task<InventoryReadModel> GetReadModel(Guid ProductId)
     {
-        return _repository.GetByProductId(ProductId);
+        return GetRepository().GetByProductId(ProductId);
     }
 
     protected override Task<long> LoadSequenceNumber()
     {
-        return _repository.GetLastProcessedSequenceNumber();
+        return GetRepository().GetLastProcessedSequenceNumber();
     }
 
     protected override Task UpdateStarting()
@@ -33,13 +34,27 @@ public class GetInventoryProjector : Projector,
 
     protected override Task UpdateComplete(long sequenceNumber)
     {
-        return _repository.Upsert(sequenceNumber, _inventories);
+        return GetRepository().Upsert(sequenceNumber, _inventories);
     }
 
     public Task UpdateWith(InventoryChangedEvent @event, EventData eventData)
     {
         _inventories.Add(new InventoryReadModel(@event.ProductId, @event.Inventory));
         return Task.CompletedTask;
+    }
+
+    private GetInventoryProjectorRepository GetRepository()
+    {
+        if (_repository == null)
+        {
+            _repository = new GetInventoryProjectorRepository(Name, _options.Value.ConnectionString, _options.Value.Schema);
+        }
+        return _repository;
+    }
+
+    public void Dispose()
+    {
+        _repository?.Dispose();
     }
 }
 
