@@ -80,6 +80,35 @@ public static class Module
 
         app.MapPost("/api/prices/change-price/v1", async ([FromServices] ChangePriceCommandHandler handler, [FromBody] ChangePriceCommand cmd) => await handler.Handle(cmd));
 
-        app.MapGet("/api/support/get-events/v1", async ([FromServices] IEventStore eventStore, [FromQuery] string aggregateId) => await eventStore.LoadEvents(aggregateId));
+        app.MapGet("/api/support/get-aggregate-events/v1", async ([FromServices] IEventStore eventStore, [FromQuery] string aggregateId) => await eventStore.LoadEvents(aggregateId));
+        app.MapGet("/api/support/get-latest-events/v1", async ([FromServices] IEventStore eventStore, [FromQuery] int eventMaxCount) =>
+        {
+            var head = (await eventStore.GetHeadSequenceNumber()) + 1; // fix offset
+            return await eventStore.LoadEvents(head - eventMaxCount, eventMaxCount);
+        });
+        app.MapGet("/api/support/get-projector-states/v1", async ([FromServices] IEventStore eventStore, [FromServices] ProjectionManager projectorManager, [FromServices] IServiceProvider serviceProvider) =>
+        {
+            var projectorTypes = projectorManager.GetProjectorTypes();
+            var eventStoreHeadSequenceNumber = await eventStore.GetHeadSequenceNumber();
+            var projectorStates = new List<object>();
+
+            foreach (var projectorType in projectorTypes)
+            {
+                var projector = (IProjector)serviceProvider.GetRequiredService(projectorType);
+
+                var projectorHeadSequenceNumber = await projector.GetSequenceNumber();
+                var processingState = await projectorManager.GetProcessingState(projector);
+
+                projectorStates.Add(new
+                {
+                    projector.Name,
+                    eventStoreHeadSequenceNumber,
+                    projectorHeadSequenceNumber,
+                    processingState
+                });
+            }
+
+            return projectorStates;
+        });
     }
 }
