@@ -16,7 +16,7 @@ public abstract class Projector : IProjector
         foreach (var @event in events)
         {
             var domainEvent = @event.Event as IDomainEvent ?? throw new InvalidOperationException($"EventStore event cannot be converted to domain event: {@event.Event.GetType().FullName}");
-            var eventData = new EventData(@event.StreamId, @event.Version, @event.Timestamp);
+            var eventData = new EventData(@event.SequenceNumber, @event.StreamId, @event.Version, @event.Timestamp);
             await Mutate(domainEvent, eventData);
             _sequenceNumber = @event.SequenceNumber;
         }

@@ -5,5 +5,5 @@
         Task UpdateWith(T @event, EventData eventData);
     }
 
-    public record EventData(string StreamId, int Version, DateTimeOffset Timestamp);
+    public record EventData(long SequenceNumber, string StreamId, int Version, DateTimeOffset Timestamp);
 }

@@ -9,11 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Cart\Infrastructure\Migration\create_GetCartsWithProducts_read_model.sql" />
     <None Remove="Cart\Infrastructure\Migration\create_GetInventory_read_model.sql" />
     <None Remove="Cart\Infrastructure\Migration\create_read_model_projector_state.sql" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Cart\Infrastructure\Migration\create_GetCartsWithProducts_read_model.sql" />
     <EmbeddedResource Include="Cart\Infrastructure\Migration\create_GetInventory_read_model.sql" />
     <EmbeddedResource Include="Cart\Infrastructure\Migration\create_read_model_projector_state.sql" />
   </ItemGroup>

@@ -9,7 +9,8 @@ public static class ReadModelMigrator
         var scripts = new List<string>
         {
             "create_read_model_projector_state.sql",
-            "create_GetInventory_read_model.sql"
+            "create_GetInventory_read_model.sql",
+            "create_GetCartsWithProducts_read_model.sql"
         };
 
         try

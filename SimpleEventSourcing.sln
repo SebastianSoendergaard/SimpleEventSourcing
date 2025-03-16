@@ -15,7 +15,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnderstandingEventsourcingE
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnderstandingEventsourcingExample.Tests", "UnderstandingEventsourcingExample.Tests\UnderstandingEventsourcingExample.Tests.csproj", "{45B68CFC-9EE7-4C6F-B664-38CC18B47AE5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Basses.SimpleMessageBus", "Basses.SimpleMessageBus\Basses.SimpleMessageBus.csproj", "{F4819BD2-FE9A-4DA1-9B95-BA60C53F7D8F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Basses.SimpleMessageBus", "Basses.SimpleMessageBus\Basses.SimpleMessageBus.csproj", "{AA7C71D4-8233-49D1-A438-38F16DBDC2BE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,10 +47,10 @@ Global
 		{45B68CFC-9EE7-4C6F-B664-38CC18B47AE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{45B68CFC-9EE7-4C6F-B664-38CC18B47AE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{45B68CFC-9EE7-4C6F-B664-38CC18B47AE5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F4819BD2-FE9A-4DA1-9B95-BA60C53F7D8F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F4819BD2-FE9A-4DA1-9B95-BA60C53F7D8F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F4819BD2-FE9A-4DA1-9B95-BA60C53F7D8F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F4819BD2-FE9A-4DA1-9B95-BA60C53F7D8F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA7C71D4-8233-49D1-A438-38F16DBDC2BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA7C71D4-8233-49D1-A438-38F16DBDC2BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA7C71D4-8233-49D1-A438-38F16DBDC2BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA7C71D4-8233-49D1-A438-38F16DBDC2BE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

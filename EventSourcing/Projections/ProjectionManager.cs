@@ -1,4 +1,5 @@
-﻿using Basses.SimpleEventStore.EventStore;
+﻿using System.Text;
+using Basses.SimpleEventStore.EventStore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Basses.SimpleEventStore.Projections;
@@ -90,11 +91,23 @@ public class ProjectionManager
             }
             catch (Exception ex)
             {
-                var error = new ProjectorProcessingError(ex.Message, ex.StackTrace ?? "", currentState.ProcessingError?.ProcessingAttempts ?? 1, DateTimeOffset.UtcNow);
+                var error = new ProjectorProcessingError(PrepareErrorMessage(ex), ex.StackTrace ?? "", currentState.ProcessingError?.ProcessingAttempts + 1 ?? 1, DateTimeOffset.UtcNow);
                 var newState = new ProjectorProcessingState(currentState.LatestSuccessfulProcessingTime, currentState.ConfirmedSequenceNumber, error);
                 await _projectorStateStore.SaveProcessingState(projector, newState);
             }
         }
+    }
+
+    private string PrepareErrorMessage(Exception exception)
+    {
+        var sb = new StringBuilder();
+        var ex = exception;
+        while (ex != null)
+        {
+            sb.Append(ex.Message).Append(" | ");
+            ex = ex.InnerException;
+        }
+        return sb.ToString();
     }
 
     private async Task<IEnumerable<EventEntry>> LoadEvents(IProjector projector, long headSequenceNumber, Dictionary<long, IEnumerable<EventEntry>> eventCache)

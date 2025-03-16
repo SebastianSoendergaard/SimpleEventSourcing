@@ -22,6 +22,11 @@ public record ItemRemovedEvent(
     Guid ItemId
 ) : IDomainEvent;
 
+public record ItemArchivedEvent(
+    Guid CartId,
+    Guid ItemId
+) : IDomainEvent;
+
 public record CartClearedEvent(
     Guid CartId
 ) : IDomainEvent;

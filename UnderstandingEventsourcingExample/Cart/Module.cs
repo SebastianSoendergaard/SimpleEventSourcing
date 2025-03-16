@@ -11,6 +11,7 @@ using UnderstandingEventsourcingExample.Cart.ClearCart;
 using UnderstandingEventsourcingExample.Cart.Domain;
 using UnderstandingEventsourcingExample.Cart.Domain.EventUpcast;
 using UnderstandingEventsourcingExample.Cart.GetCartItems;
+using UnderstandingEventsourcingExample.Cart.GetCartsWithProducts;
 using UnderstandingEventsourcingExample.Cart.GetInventory;
 using UnderstandingEventsourcingExample.Cart.Infrastructure.Kafka;
 using UnderstandingEventsourcingExample.Cart.Infrastructure.Migration;
@@ -46,10 +47,12 @@ public static class Module
         services.AddScoped<ChangeInventoryCommandHandler>();
         services.AddScoped<GetInventoryQueryHandler>();
         services.AddScoped<ChangePriceCommandHandler>();
+        services.AddScoped<GetCartsWithProductsQueryHandler>();
         services.AddScoped<SubmitCartCommandHandler>();
 
         ReadModelMigrator.Migrate(connectionString);
         services.AddScoped<GetInventoryProjector>();
+        services.AddScoped<GetCartsWithProductsProjector>();
 
         services.AddScoped<CartRepository>();
         services.AddScoped<InventoryRepository>();
@@ -67,6 +70,7 @@ public static class Module
 
         var projectionManager = host.Services.GetRequiredService<ProjectionManager>();
         projectionManager.RegisterSynchronousProjector<GetInventoryProjector>();
+        projectionManager.RegisterSynchronousProjector<GetCartsWithProductsProjector>();
 
         var messageConsumer = host.Services.GetRequiredService<IMessageConsumer>();
         messageConsumer.Subscribe<ExternalInventoryChangedEvent>("understand-es-test", "inventory-changed", async e =>
@@ -86,8 +90,8 @@ public static class Module
         app.MapPost("/api/cart/clear-cart/v1", async ([FromServices] ClearCartCommandHandler handler, [FromBody] ClearCartCommand cmd) => await handler.Handle(cmd));
         app.MapGet("/api/cart/get-items/v1", async ([FromServices] GetCartItemsQueryHandler handler, [FromQuery] Guid cartId) => await handler.Handle(new GetCartItemsQuery(cartId)));
         app.MapPost("/api/cart/submit-cart/v1", async ([FromServices] SubmitCartCommandHandler handler, [FromBody] SubmitCartCommand cmd) => await handler.Handle(cmd));
-
-        app.MapGet("/api/inventories/get-inventory/v1", async ([FromServices] GetInventoryQueryHandler handler, [FromQuery] Guid productId) => await handler.Handle(new GetInventoryQuery(productId)));
+        app.MapGet("/api/cart/get-inventory/v1", async ([FromServices] GetInventoryQueryHandler handler, [FromQuery] Guid productId) => await handler.Handle(new GetInventoryQuery(productId)));
+        app.MapGet("/api/cart/get-cartswithproducts/v1", async ([FromServices] GetCartsWithProductsQueryHandler handler, [FromQuery] Guid productId) => await handler.Handle(new GetCartsWithProductsQuery(productId)));
 
         app.MapPost("/api/external/change-inventory/v1", async ([FromServices] IMessageProducer messageProducer, [FromBody] ExternalInventoryChangedEvent e) => await messageProducer.SendMessage("understand-es-test", "inventory-changed", e));
         app.MapPost("/api/external/change-price/v1", async ([FromServices] IMessageProducer messageProducer, [FromBody] ExternalPriceChangedEvent e) => await messageProducer.SendMessage("understand-es-test", "price-changed", e));
