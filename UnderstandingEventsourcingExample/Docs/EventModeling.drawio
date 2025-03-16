@@ -1,6 +1,6 @@
-<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.0.9 Chrome/128.0.6613.186 Electron/32.2.5 Safari/537.36" version="26.0.9">
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.0.16 Chrome/132.0.6834.196 Electron/34.2.0 Safari/537.36" version="26.0.16">
   <diagram name="Page-1" id="xVLohdDUBPAaQV3EGwE7">
-    <mxGraphModel dx="2712" dy="1925" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="3190" dy="2207" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" style="locked=1;" parent="0" />
@@ -729,7 +729,7 @@
         <mxCell id="8i-SZxHf3FPcpDf9zbPk-18" value="&lt;b&gt;Inventory Changed&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0a30a;strokeColor=#BD7000;fontColor=#000000;" parent="1" vertex="1">
           <mxGeometry x="1876" y="1830" width="120" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="ByxKJx8sGJnM6fiIf0L5-155" value="Slices" style="" parent="0" />
+        <mxCell id="ByxKJx8sGJnM6fiIf0L5-155" value="Slices" style="locked=1;" parent="0" />
         <mxCell id="ByxKJx8sGJnM6fiIf0L5-234" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#00FF00;" parent="ByxKJx8sGJnM6fiIf0L5-155" vertex="1">
           <mxGeometry x="80" y="1561" width="345" height="384" as="geometry" />
         </mxCell>
@@ -758,7 +758,7 @@
           <mxGeometry x="3487" y="-566" width="189" height="2075" as="geometry" />
         </mxCell>
         <mxCell id="ByxKJx8sGJnM6fiIf0L5-165" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;" parent="ByxKJx8sGJnM6fiIf0L5-155" vertex="1">
-          <mxGeometry x="3949" y="-562" width="366" height="2075" as="geometry" />
+          <mxGeometry x="3717" y="-562" width="598" height="2075" as="geometry" />
         </mxCell>
         <mxCell id="ByxKJx8sGJnM6fiIf0L5-166" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;" parent="ByxKJx8sGJnM6fiIf0L5-155" vertex="1">
           <mxGeometry x="4396" y="-562" width="366" height="2075" as="geometry" />
@@ -793,14 +793,8 @@
         <mxCell id="ByxKJx8sGJnM6fiIf0L5-176" value="&lt;font style=&quot;font-size: 30px; background-color: light-dark(rgb(255, 255, 255), rgb(0, 143, 0));&quot;&gt;Carts with Products&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=none;fontColor=default;" parent="ByxKJx8sGJnM6fiIf0L5-155" vertex="1">
           <mxGeometry x="3475" y="-509" width="218" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="ByxKJx8sGJnM6fiIf0L5-177" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;" parent="ByxKJx8sGJnM6fiIf0L5-155" vertex="1">
-          <mxGeometry x="3712" y="-566" width="189" height="2075" as="geometry" />
-        </mxCell>
-        <mxCell id="ByxKJx8sGJnM6fiIf0L5-178" value="&lt;font style=&quot;font-size: 30px; background-color: light-dark(rgb(255, 255, 255), rgb(0, 143, 0));&quot;&gt;Changed Prices&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=none;fontColor=default;" parent="ByxKJx8sGJnM6fiIf0L5-155" vertex="1">
-          <mxGeometry x="3723" y="-509" width="178" height="30" as="geometry" />
-        </mxCell>
         <mxCell id="ByxKJx8sGJnM6fiIf0L5-179" value="&lt;font style=&quot;font-size: 30px; background-color: light-dark(rgb(255, 255, 255), rgb(0, 143, 0));&quot;&gt;Archive Item&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=none;fontColor=default;" parent="ByxKJx8sGJnM6fiIf0L5-155" vertex="1">
-          <mxGeometry x="3989" y="-509" width="301" height="30" as="geometry" />
+          <mxGeometry x="3876" y="-512" width="301" height="30" as="geometry" />
         </mxCell>
         <mxCell id="ByxKJx8sGJnM6fiIf0L5-180" value="&lt;font style=&quot;font-size: 30px; background-color: light-dark(rgb(255, 255, 255), rgb(0, 143, 0));&quot;&gt;Submit Cart&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=none;fontColor=default;" parent="ByxKJx8sGJnM6fiIf0L5-155" vertex="1">
           <mxGeometry x="4421" y="-506" width="301" height="30" as="geometry" />

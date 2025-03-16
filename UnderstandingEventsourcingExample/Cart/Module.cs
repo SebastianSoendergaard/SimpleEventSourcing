@@ -42,6 +42,7 @@ public static class Module
 
         services.AddScoped<AddItemCommandHandler>();
         services.AddScoped<RemoveItemCommandHandler>();
+        services.AddScoped<ArchiveItemCommandHandler>();
         services.AddScoped<ClearCartCommandHandler>();
         services.AddScoped<GetCartItemsQueryHandler>();
         services.AddScoped<ChangeInventoryCommandHandler>();
@@ -87,6 +88,7 @@ public static class Module
     {
         app.MapPost("/api/cart/add-item/v1", async ([FromServices] AddItemCommandHandler handler, [FromBody] AddItemCommand cmd) => await handler.Handle(cmd));
         app.MapPost("/api/cart/remove-item/v1", async ([FromServices] RemoveItemCommandHandler handler, [FromBody] RemoveItemCommand cmd) => await handler.Handle(cmd));
+        app.MapPost("/api/cart/archive-item/v1", async ([FromServices] ArchiveItemCommandHandler handler, [FromBody] ArchiveItemCommand cmd) => await handler.Handle(cmd));
         app.MapPost("/api/cart/clear-cart/v1", async ([FromServices] ClearCartCommandHandler handler, [FromBody] ClearCartCommand cmd) => await handler.Handle(cmd));
         app.MapGet("/api/cart/get-items/v1", async ([FromServices] GetCartItemsQueryHandler handler, [FromQuery] Guid cartId) => await handler.Handle(new GetCartItemsQuery(cartId)));
         app.MapPost("/api/cart/submit-cart/v1", async ([FromServices] SubmitCartCommandHandler handler, [FromBody] SubmitCartCommand cmd) => await handler.Handle(cmd));

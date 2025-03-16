@@ -6,6 +6,7 @@ public class CartAggregate : Aggregate,
     IDomainEventHandler<CartCreatedEvent>,
     IDomainEventHandler<ItemAddedEventV2>,
     IDomainEventHandler<ItemRemovedEvent>,
+    IDomainEventHandler<ItemArchivedEvent>,
     IDomainEventHandler<CartClearedEvent>,
     IDomainEventHandler<CartSubmittedEvent>
 {
@@ -48,6 +49,17 @@ public class CartAggregate : Aggregate,
         Apply(new ItemRemovedEvent(new Guid(Id), itemId));
     }
 
+    public void ArchiveItem(Guid productId)
+    {
+        foreach (var kv in _items)
+        {
+            if (kv.Value == productId)
+            {
+                Apply(new ItemArchivedEvent(new Guid(Id), kv.Key));
+            }
+        }
+    }
+
     public void Clear()
     {
         Apply(new CartClearedEvent(new Guid(Id)));
@@ -82,6 +94,11 @@ public class CartAggregate : Aggregate,
     }
 
     public void On(ItemRemovedEvent @event)
+    {
+        _items.Remove(@event.ItemId);
+    }
+
+    public void On(ItemArchivedEvent @event)
     {
         _items.Remove(@event.ItemId);
     }

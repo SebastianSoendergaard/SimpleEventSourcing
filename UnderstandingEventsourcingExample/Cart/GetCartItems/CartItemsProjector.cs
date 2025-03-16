@@ -7,6 +7,7 @@ public class CartItemsProjector : Projector,
     IProjectionEventHandler<CartCreatedEvent>,
     IProjectionEventHandler<ItemAddedEventV2>,
     IProjectionEventHandler<ItemRemovedEvent>,
+    IProjectionEventHandler<ItemArchivedEvent>,
     IProjectionEventHandler<CartClearedEvent>
 {
     private Guid? _cartId;
@@ -40,6 +41,17 @@ public class CartItemsProjector : Projector,
     }
 
     public Task UpdateWith(ItemRemovedEvent @event, EventData eventData)
+    {
+        var item = _items.FirstOrDefault(x => x.ItemId == @event.ItemId);
+        if (item != null)
+        {
+            _items.Remove(item);
+            _totalPrice -= item.Price;
+        }
+        return Task.CompletedTask;
+    }
+
+    public Task UpdateWith(ItemArchivedEvent @event, EventData eventData)
     {
         var item = _items.FirstOrDefault(x => x.ItemId == @event.ItemId);
         if (item != null)
