@@ -4,4 +4,6 @@ The book can be found here: https://leanpub.com/eventmodeling-and-eventsourcing.
 
 My examples are implemented using my own event store implementation and compared to the original Kotlin/Axon examples I have tried to use as little magic as possible making it very clear what is going on.
 
+To run the project, start by running docker-compose.
 
+The actual implementation is located in the Cart and Cart.Tests folders.
