@@ -3,7 +3,12 @@ using Basses.SimpleEventStore.PostgreSql;
 using Basses.SimpleEventStore.Projections;
 using Basses.SimpleMessageBus;
 using Basses.SimpleMessageBus.Kafka;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using UnderstandingEventsourcingExample.Cart.AddItem;
 using UnderstandingEventsourcingExample.Cart.ChangeInventory;
 using UnderstandingEventsourcingExample.Cart.ChangePrice;
@@ -84,7 +89,7 @@ public static class Module
         });
     }
 
-    public static void RegisterCartModuleEndpoints(this WebApplication app)
+    public static void RegisterCartModuleEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapPost("/api/cart/add-item/v1", async ([FromServices] AddItemCommandHandler handler, [FromBody] AddItemCommand cmd) => await handler.Handle(cmd));
         app.MapPost("/api/cart/remove-item/v1", async ([FromServices] RemoveItemCommandHandler handler, [FromBody] RemoveItemCommand cmd) => await handler.Handle(cmd));

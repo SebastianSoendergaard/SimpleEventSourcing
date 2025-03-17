@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Infrastructure\Migration\create_GetCartsWithProducts_read_model.sql" />
+    <EmbeddedResource Include="Infrastructure\Migration\create_GetInventory_read_model.sql" />
+    <EmbeddedResource Include="Infrastructure\Migration\create_read_model_projector_state.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.3.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Routing" Version="2.3.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Routing.Abstractions" Version="2.3.0" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Basses.SimpleEventStore.PostgreSql\Basses.SimpleEventStore.PostgreSql.csproj" />
+    <ProjectReference Include="..\..\Basses.SimpleMessageBus\Basses.SimpleMessageBus.csproj" />
+  </ItemGroup>
+
+</Project>
