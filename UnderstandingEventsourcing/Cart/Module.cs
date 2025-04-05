@@ -1,6 +1,7 @@
 ﻿using Basses.SimpleEventStore.EventStore;
 using Basses.SimpleEventStore.PostgreSql;
 using Basses.SimpleEventStore.Projections;
+using Basses.SimpleEventStore.Reactions;
 using Basses.SimpleMessageBus;
 using Basses.SimpleMessageBus.Kafka;
 using Microsoft.AspNetCore.Builder;
@@ -35,13 +36,16 @@ public static class Module
         var schema = configuration.GetValue<string>("Cart:EventStore:Schema") ?? "";
         var eventStoreName = configuration.GetValue<string>("Cart:EventStore:EventStoreName") ?? "";
         var projectorStateStoreName = configuration.GetValue<string>("Cart:EventStore:ProjectorStateStoreName") ?? "";
+        var reactorStateStoreName = configuration.GetValue<string>("Cart:EventStore:ReactorStateStoreName") ?? "";
 
         var kafkaServer = configuration.GetValue<string>("Cart:Kafka:Server") ?? "";
         var kafkaClientId = configuration.GetValue<string>("Cart:Kafka:ClientId") ?? "";
 
         services.AddSingleton<IEventStore>(x => new PostgreSqlEventStore(connectionString, schema, eventStoreName));
         services.AddSingleton<IProjectorStateStore>(x => new PostgreSqlProjectorStateStore(connectionString, schema, projectorStateStoreName));
+        services.AddSingleton<IReactorStateStore>(x => new PostgreSqlReactorStateStore(connectionString, schema, reactorStateStoreName));
         services.AddSingleton<ProjectionManager>();
+        services.AddSingleton<ReactionManager>();
 
         services.AddKafkaMessageBus();
 
@@ -78,6 +82,8 @@ public static class Module
         projectionManager.RegisterSynchronousProjector<GetInventoryProjector>();
         projectionManager.RegisterSynchronousProjector<GetCartsWithProductsProjector>();
 
+        var reactionManager = host.Services.GetRequiredService<ReactionManager>();
+
         var messageConsumer = host.Services.GetRequiredService<IMessageConsumer>();
         messageConsumer.Subscribe<ExternalInventoryChangedEvent>("understand-eventsourcing-topic", "inventory-changed", async e =>
         {
@@ -109,9 +115,9 @@ public static class Module
             var head = (await eventStore.GetHeadSequenceNumber()) + 1; // fix offset
             return await eventStore.LoadEvents(head - eventMaxCount, eventMaxCount);
         });
-        app.MapGet("/api/support/get-projector-states/v1", async ([FromServices] IEventStore eventStore, [FromServices] ProjectionManager projectorManager, [FromServices] IServiceProvider serviceProvider) =>
+        app.MapGet("/api/support/get-projector-states/v1", async ([FromServices] IEventStore eventStore, [FromServices] ProjectionManager projectionManager, [FromServices] IServiceProvider serviceProvider) =>
         {
-            var projectorTypes = projectorManager.GetProjectorTypes();
+            var projectorTypes = projectionManager.GetProjectorTypes();
             var eventStoreHeadSequenceNumber = await eventStore.GetHeadSequenceNumber();
             var projectorStates = new List<object>();
 
@@ -119,8 +125,8 @@ public static class Module
             {
                 var projector = (IProjector)serviceProvider.GetRequiredService(projectorType);
 
-                var projectorHeadSequenceNumber = await projector.GetSequenceNumber();
-                var processingState = await projectorManager.GetProcessingState(projector);
+                var processingState = await projectionManager.GetProcessingState(projector);
+                var projectorHeadSequenceNumber = await projector.GetSequenceNumber(processingState);
 
                 projectorStates.Add(new
                 {
@@ -132,6 +138,30 @@ public static class Module
             }
 
             return projectorStates;
+        });
+        app.MapGet("/api/support/get-reactor-states/v1", async ([FromServices] IEventStore eventStore, [FromServices] ReactionManager reactionManager, [FromServices] IServiceProvider serviceProvider) =>
+        {
+            var reactorTypes = reactionManager.GetReactorTypes();
+            var eventStoreHeadSequenceNumber = await eventStore.GetHeadSequenceNumber();
+            var reactorStates = new List<object>();
+
+            foreach (var reactorType in reactorTypes)
+            {
+                var reactor = (IReactor)serviceProvider.GetRequiredService(reactorType);
+
+                var processingState = await reactionManager.GetProcessingState(reactor);
+                var reactorHeadSequenceNumber = await reactor.GetSequenceNumber(processingState);
+
+                reactorStates.Add(new
+                {
+                    reactor.Name,
+                    eventStoreHeadSequenceNumber,
+                    reactorHeadSequenceNumber,
+                    processingState
+                });
+            }
+
+            return reactorStates;
         });
     }
 }

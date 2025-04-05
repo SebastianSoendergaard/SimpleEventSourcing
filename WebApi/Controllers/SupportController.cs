@@ -47,8 +47,8 @@ public class SupportController : ControllerBase
         {
             var projector = (IProjector)_serviceProvider.GetRequiredService(projectorType);
 
-            var sequenceNumber = await projector.GetSequenceNumber();
             var processingState = await _projectionManager.GetProcessingState(projector);
+            var sequenceNumber = await projector.GetSequenceNumber(processingState);
 
             projectorStates.Add(new
             {

@@ -1,9 +1,6 @@
-﻿namespace Basses.SimpleEventStore.Enablers
-{
-    public interface IProjectionEventHandler<T> where T : IDomainEvent
-    {
-        Task UpdateWith(T @event, EventData eventData);
-    }
+﻿namespace Basses.SimpleEventStore.Enablers;
 
-    public record EventData(long SequenceNumber, string StreamId, int Version, DateTimeOffset Timestamp);
+public interface IProjectionEventHandler<T> where T : IDomainEvent
+{
+    Task UpdateWith(T @event, EventData eventData);
 }

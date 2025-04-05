@@ -1,10 +1,10 @@
 ﻿using Basses.SimpleEventStore.EventStore;
 using Basses.SimpleEventStore.EventSubscriber;
-using Basses.SimpleEventStore.Projections;
+using Basses.SimpleEventStore.Reactions;
 
 namespace Basses.SimpleEventStore.Enablers;
 
-public abstract class Projector : IProjector
+public abstract class Reactor : IReactor
 {
     private long _sequenceNumber = 0;
 
@@ -27,9 +27,9 @@ public abstract class Projector : IProjector
 
     private Task Mutate(IDomainEvent @event, EventData eventData)
     {
-        if (MutationRegistry.CanMutate(this, @event, typeof(IProjectionEventHandler<>)))
+        if (MutationRegistry.CanMutate(this, @event, typeof(IReactionEventHandler<>)))
         {
-            return ((dynamic)this).UpdateWith((dynamic)@event, eventData);
+            return ((dynamic)this).ReactOn((dynamic)@event, eventData);
         }
         return Task.CompletedTask;
     }

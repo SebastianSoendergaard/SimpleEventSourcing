@@ -1,10 +1,7 @@
-﻿using Basses.SimpleEventStore.EventStore;
+﻿using Basses.SimpleEventStore.EventSubscriber;
 
 namespace Basses.SimpleEventStore.Projections;
 
-public interface IProjector
+public interface IProjector : IEventSubscriber
 {
-    string Name { get; }
-    Task<long> GetSequenceNumber();
-    Task Update(IEnumerable<EventEntry> events);
 }
