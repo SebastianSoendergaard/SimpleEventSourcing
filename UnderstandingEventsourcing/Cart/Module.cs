@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using UnderstandingEventsourcingExample.Cart.AddItem;
+using UnderstandingEventsourcingExample.Cart.ArchiveItem;
 using UnderstandingEventsourcingExample.Cart.ChangeInventory;
 using UnderstandingEventsourcingExample.Cart.ChangePrice;
 using UnderstandingEventsourcingExample.Cart.ClearCart;
@@ -21,6 +22,7 @@ using UnderstandingEventsourcingExample.Cart.GetCartsWithProducts;
 using UnderstandingEventsourcingExample.Cart.GetInventory;
 using UnderstandingEventsourcingExample.Cart.Infrastructure.Kafka;
 using UnderstandingEventsourcingExample.Cart.Infrastructure.Migration;
+using UnderstandingEventsourcingExample.Cart.PublishCart;
 using UnderstandingEventsourcingExample.Cart.RemoveItem;
 
 namespace UnderstandingEventsourcingExample.Cart;
@@ -59,10 +61,14 @@ public static class Module
         services.AddScoped<ChangePriceCommandHandler>();
         services.AddScoped<GetCartsWithProductsQueryHandler>();
         services.AddScoped<SubmitCartCommandHandler>();
+        services.AddScoped<PublishCartCommandHandler>();
 
         ReadModelMigrator.Migrate(connectionString);
         services.AddScoped<GetInventoryProjector>();
         services.AddScoped<GetCartsWithProductsProjector>();
+
+        services.AddScoped<ArchiveItemAutomationReactor>();
+        services.AddScoped<PublishCartAutomationReactor>();
 
         services.AddScoped<CartRepository>();
         services.AddScoped<InventoryRepository>();
@@ -83,6 +89,8 @@ public static class Module
         projectionManager.RegisterSynchronousProjector<GetCartsWithProductsProjector>();
 
         var reactionManager = host.Services.GetRequiredService<ReactionManager>();
+        reactionManager.RegisterSynchronousReactor<ArchiveItemAutomationReactor>();
+        reactionManager.RegisterSynchronousReactor<PublishCartAutomationReactor>();
 
         var messageConsumer = host.Services.GetRequiredService<IMessageConsumer>();
         messageConsumer.Subscribe<ExternalInventoryChangedEvent>("understand-eventsourcing-topic", "inventory-changed", async e =>

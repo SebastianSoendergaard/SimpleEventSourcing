@@ -1,9 +1,11 @@
 ﻿namespace UnderstandingEventsourcingExample.Cart.PublishCart;
 
-public record ExternalOrderedProduct(Guid ProductId, decimal Price);
 public record ExternalPublishedCartEvent(
     Guid CartId,
-    ExternalOrderedProduct[] OrderedProducts,
+    ExternalPublishedCartEvent.OrderedProduct[] OrderedProducts,
     decimal TotalPrice
-);
+)
+{
+    public record OrderedProduct(Guid ProductId, decimal Price);
+};
 

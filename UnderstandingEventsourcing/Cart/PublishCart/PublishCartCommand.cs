@@ -3,12 +3,14 @@ using UnderstandingEventsourcingExample.Cart.Domain;
 
 namespace UnderstandingEventsourcingExample.Cart.PublishCart;
 
-public record OrderedProduct(Guid ProductId, decimal Price);
 public record PublishCartCommand(
     Guid CartId,
-    OrderedProduct[] OrderedProducts,
+    PublishCartCommand.OrderedProduct[] OrderedProducts,
     decimal TotalPrice
-);
+)
+{
+    public record OrderedProduct(Guid ProductId, decimal Price);
+};
 
 public class PublishCartCommandHandler(CartRepository repository, IMessageProducer messageProducer)
 {
@@ -22,7 +24,7 @@ public class PublishCartCommandHandler(CartRepository repository, IMessageProduc
 
         var externalEvent = new ExternalPublishedCartEvent(
             command.CartId,
-            command.OrderedProducts.Select(p => new ExternalOrderedProduct(p.ProductId, p.Price)).ToArray(),
+            command.OrderedProducts.Select(p => new ExternalPublishedCartEvent.OrderedProduct(p.ProductId, p.Price)).ToArray(),
             command.TotalPrice
         );
 

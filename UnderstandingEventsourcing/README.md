@@ -85,7 +85,6 @@ Notice that I think there is a mistake in the book, as the ItemId is suddenly us
 <img src="./Docs/images/archive_item.PNG" alt="Archive item"/>
 
 Automation pattern. The "Changed Prices" read model is in this case just on the model to make it understandable to the business. In fact the actual trigger is the event "Price Changed". The event will trigger the automation which will look in the "Carts with products" read model and for each cart with the given product execute a command.
-For now there is no support for this kind of automation, but it is on the list so hopefully comming soon :-)
 
 ### Submit cart
 
@@ -97,8 +96,7 @@ Simple command pattern.
 
 <img src="./Docs/images/publish_cart.PNG" alt="Publish cart"/>
 
-Another automation. It is triggered by the "Cart Submitted" event. It will execute a command to publish an external event to Kafka. Based on the result it will generate a new internal event with the result.
-Again this kind of automation is not yet supported.
+Another automation. It is triggered by the "Cart Submitted" event. It will execute a command to publish an external event to Kafka. Based on the result it will generate a new domain event with the result.
 
 ## Extra
 
@@ -109,6 +107,8 @@ Again this kind of automation is not yet supported.
 ### Uniqueness
 
 ### Avoid long event streams
+
+### TODO pattern
 
 ## Conclusion
 

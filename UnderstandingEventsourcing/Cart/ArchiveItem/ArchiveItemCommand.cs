@@ -1,6 +1,6 @@
 ﻿using UnderstandingEventsourcingExample.Cart.Domain;
 
-namespace UnderstandingEventsourcingExample.Cart.RemoveItem;
+namespace UnderstandingEventsourcingExample.Cart.ArchiveItem;
 
 public record ArchiveItemCommand(
     Guid CartId,
