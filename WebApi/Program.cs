@@ -38,9 +38,9 @@ builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 var projectionManager = app.Services.GetRequiredService<ProjectionManager>();
-projectionManager.RegisterSynchronousProjector<UserProjector>();
-projectionManager.RegisterSynchronousProjector<UserNameProjector>();
-projectionManager.RegisterSynchronousProjector<PersistedUserProjector>();
+//projectionManager.RegisterSynchronousProjector<UserProjector>();
+//projectionManager.RegisterSynchronousProjector<UserNameProjector>();
+//projectionManager.RegisterSynchronousProjector<PersistedUserProjector>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

@@ -5,21 +5,9 @@ namespace Basses.SimpleEventStore.Projections;
 
 public class ProjectionManager : EventSubscriptionManager
 {
-    public ProjectionManager(IEventStore eventStore, IProjectorStateStore projectorStateStore, IServiceProvider serviceProvider)
-        : base(eventStore, projectorStateStore, serviceProvider)
+    public ProjectionManager(IEventStore eventStore, IProjectorStateStore projectorStateStore, ProjectionsRegister projectionsRegister, IServiceProvider serviceProvider)
+        : base(eventStore, projectorStateStore, projectionsRegister, serviceProvider)
     {
-    }
-
-    public ProjectionManager RegisterSynchronousProjector<TProjector>() where TProjector : IProjector
-    {
-        RegisterSynchronousSubscriber<TProjector>();
-        return this;
-    }
-
-    public ProjectionManager RegisterAsynchronousProjector<TProjector>() where TProjector : IProjector
-    {
-        RegisterAsynchronousSubscriber<TProjector>();
-        return this;
     }
 
     public IEnumerable<Type> GetProjectorTypes()
@@ -30,5 +18,10 @@ public class ProjectionManager : EventSubscriptionManager
     public Task<EventSubscriberProcessingState> GetProcessingState(IProjector projector)
     {
         return base.GetProcessingState(projector);
+    }
+
+    public Task RunAsync(CancellationToken stoppingToken)
+    {
+        return Task.CompletedTask;
     }
 }

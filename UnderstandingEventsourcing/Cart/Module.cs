@@ -1,4 +1,5 @@
-﻿using Basses.SimpleEventStore.EventStore;
+﻿using Basses.SimpleEventStore;
+using Basses.SimpleEventStore.EventStore;
 using Basses.SimpleEventStore.PostgreSql;
 using Basses.SimpleEventStore.Projections;
 using Basses.SimpleEventStore.Reactions;
@@ -43,11 +44,23 @@ public static class Module
         var kafkaServer = configuration.GetValue<string>("Cart:Kafka:Server") ?? "";
         var kafkaClientId = configuration.GetValue<string>("Cart:Kafka:ClientId") ?? "";
 
-        services.AddSingleton<IEventStore>(x => new PostgreSqlEventStore(connectionString, schema, eventStoreName));
-        services.AddSingleton<IProjectorStateStore>(x => new PostgreSqlProjectorStateStore(connectionString, schema, projectorStateStoreName));
-        services.AddSingleton<IReactorStateStore>(x => new PostgreSqlReactorStateStore(connectionString, schema, reactorStateStoreName));
-        services.AddSingleton<ProjectionManager>();
-        services.AddSingleton<ReactionManager>();
+        services.AddEventStore(
+            _ => new PostgreSqlEventStore(connectionString, schema, eventStoreName),
+            r => r
+            .RegisterUpcaster(new ItemAddedEventUpcaster())
+        );
+        services.AddProjections(
+            _ => new PostgreSqlProjectorStateStore(connectionString, schema, projectorStateStoreName),
+            r => r
+            .RegisterSynchronousProjector<GetInventoryProjector>()
+            .RegisterSynchronousProjector<GetCartsWithProductsProjector>()
+        );
+        services.AddReactions(
+            _ => new PostgreSqlReactorStateStore(connectionString, schema, reactorStateStoreName),
+            r => r
+            .RegisterSynchronousReactor<ArchiveItemAutomationReactor>()
+            .RegisterSynchronousReactor<PublishCartAutomationReactor>()
+        );
 
         services.AddKafkaMessageBus();
 
@@ -64,11 +77,6 @@ public static class Module
         services.AddScoped<PublishCartCommandHandler>();
 
         ReadModelMigrator.Migrate(connectionString);
-        services.AddScoped<GetInventoryProjector>();
-        services.AddScoped<GetCartsWithProductsProjector>();
-
-        services.AddScoped<ArchiveItemAutomationReactor>();
-        services.AddScoped<PublishCartAutomationReactor>();
 
         services.AddScoped<CartRepository>();
         services.AddScoped<InventoryRepository>();
@@ -81,17 +89,6 @@ public static class Module
 
     public static void UseCartModule(this IHost host)
     {
-        var eventStore = host.Services.GetRequiredService<IEventStore>();
-        eventStore.RegisterUpcaster(new ItemAddedEventUpcaster());
-
-        var projectionManager = host.Services.GetRequiredService<ProjectionManager>();
-        projectionManager.RegisterSynchronousProjector<GetInventoryProjector>();
-        projectionManager.RegisterSynchronousProjector<GetCartsWithProductsProjector>();
-
-        var reactionManager = host.Services.GetRequiredService<ReactionManager>();
-        reactionManager.RegisterSynchronousReactor<ArchiveItemAutomationReactor>();
-        reactionManager.RegisterSynchronousReactor<PublishCartAutomationReactor>();
-
         var messageConsumer = host.Services.GetRequiredService<IMessageConsumer>();
         messageConsumer.Subscribe<ExternalInventoryChangedEvent>("understand-eventsourcing-topic", "inventory-changed", async e =>
         {

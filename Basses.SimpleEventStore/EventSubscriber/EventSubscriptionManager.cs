@@ -8,42 +8,38 @@ public abstract class EventSubscriptionManager
 {
     private readonly IEventStore _eventStore;
     private readonly IEventSubscriberStateStore _subscriberStateStore;
+    private readonly SubscriberRegister _subscriberRegister;
     private readonly IServiceProvider _serviceProvider;
-    private readonly List<Type> _synchronousSubscribers = [];
-    private readonly List<Type> _asynchronousSubscribers = [];
 
-    public EventSubscriptionManager(IEventStore eventStore, IEventSubscriberStateStore subscriberStateStore, IServiceProvider serviceProvider)
+    public EventSubscriptionManager(IEventStore eventStore, IEventSubscriberStateStore subscriberStateStore, SubscriberRegister subscriberRegister, IServiceProvider serviceProvider)
     {
         _eventStore = eventStore;
         _subscriberStateStore = subscriberStateStore;
+        _subscriberRegister = subscriberRegister;
         _serviceProvider = serviceProvider;
+
         _eventStore.RegisterForEventsAppendedNotifications(NotifySynchronousSubscribers);
+        RegisterSubscribers();
     }
 
-    protected void RegisterSynchronousSubscriber<TSubscriber>() where TSubscriber : IEventSubscriber
+    private void RegisterSubscribers()
     {
         using var scope = _serviceProvider.CreateScope();
-        var subscriber = scope.ServiceProvider.GetRequiredService<TSubscriber>();
-        _subscriberStateStore.UpsertSubscriber(subscriber);
-        _synchronousSubscribers.Add(subscriber.GetType());
-    }
-
-    protected void RegisterAsynchronousSubscriber<TSubscriber>() where TSubscriber : IEventSubscriber
-    {
-        using var scope = _serviceProvider.CreateScope();
-        var subscriber = scope.ServiceProvider.GetRequiredService<TSubscriber>();
-        _subscriberStateStore.UpsertSubscriber(subscriber);
-        _synchronousSubscribers.Add(subscriber.GetType());
+        foreach (var subscriberType in _subscriberRegister.AllSubscribers)
+        {
+            var subscriber = (IEventSubscriber)scope.ServiceProvider.GetRequiredService(subscriberType);
+            _subscriberStateStore.UpsertSubscriber(subscriber);
+        }
     }
 
     private Task NotifySynchronousSubscribers()
     {
-        return NotifySubscribers(_synchronousSubscribers);
+        return NotifySubscribers(_subscriberRegister.SynchronousSubscribers);
     }
 
-    private Task NotifyAsynchronousSubscribers()
+    protected Task NotifyAsynchronousSubscribers()
     {
-        return NotifySubscribers(_asynchronousSubscribers);
+        return NotifySubscribers(_subscriberRegister.AsynchronousSubscribers);
 
         // TODO: continue updates if not done yet
     }
@@ -132,7 +128,7 @@ public abstract class EventSubscriptionManager
 
     protected IEnumerable<Type> GetSubscriberTypes()
     {
-        return _synchronousSubscribers.Concat(_asynchronousSubscribers);
+        return _subscriberRegister.AllSubscribers;
     }
 
     protected Task<EventSubscriberProcessingState> GetProcessingState(IEventSubscriber projector)
