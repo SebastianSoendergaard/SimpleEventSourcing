@@ -31,25 +31,22 @@ public class GetCartsWithProductsProjector : Projector,
 
     public Task UpdateWith(CartClearedEvent @event, EventData eventData)
     {
-        return GetRepository().RemoveAllProductsFromCart(@event.CartId, eventData.SequenceNumber);
+        return GetRepository().RemoveAllItemsFromCart(@event.CartId, eventData.SequenceNumber);
     }
 
     public Task UpdateWith(ItemRemovedEvent @event, EventData eventData)
     {
-        // It seems strange using ItemId for ProductId here, it might be a mistake in the book
-        return GetRepository().RemoveProductFromCart(@event.CartId, @event.ItemId, eventData.SequenceNumber);
+        return GetRepository().RemoveItemFromCart(@event.CartId, @event.ItemId, eventData.SequenceNumber);
     }
 
     public Task UpdateWith(ItemArchivedEvent @event, EventData eventData)
     {
-        // It seems strange using ItemId for ProductId here, it might be a mistake in the book
-        return GetRepository().RemoveProductFromCart(@event.CartId, @event.ItemId, eventData.SequenceNumber);
+        return GetRepository().RemoveItemFromCart(@event.CartId, @event.ItemId, eventData.SequenceNumber);
     }
 
     public Task UpdateWith(ItemAddedEventV2 @event, EventData eventData)
     {
-        // It seems strange using ItemId for ProductId here, it might be a mistake in the book
-        return GetRepository().AddProductToCart(@event.CartId, @event.ItemId, eventData.SequenceNumber);
+        return GetRepository().AddProductToCart(@event.CartId, @event.ItemId, @event.ProductId, eventData.SequenceNumber);
     }
 
     private GetCartsWithProductsProjectorRepository GetRepository()

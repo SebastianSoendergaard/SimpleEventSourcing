@@ -66,10 +66,10 @@ public sealed class GetCartsWithProductsProjectorRepository : IDisposable
         }
     }
 
-    public async Task AddProductToCart(Guid cartId, Guid productId, long sequenceNumber)
+    public async Task AddProductToCart(Guid cartId, Guid itemId, Guid productId, long sequenceNumber)
     {
-        var sql = $@"INSERT INTO {_schema}.get_carts_with_products_read_model (cart_id, product_id)
-                        VALUES (@cart_id, @product_id)";
+        var sql = $@"INSERT INTO {_schema}.get_carts_with_products_read_model (cart_id, item_id, product_id)
+                        VALUES (@cart_id, @item_id, @product_id)";
 
         try
         {
@@ -78,6 +78,7 @@ public sealed class GetCartsWithProductsProjectorRepository : IDisposable
             using var cmd = new NpgsqlCommand(sql);
             cmd.Connection = _connection;
             cmd.Parameters.AddWithValue("cart_id", cartId);
+            cmd.Parameters.AddWithValue("item_id", itemId);
             cmd.Parameters.AddWithValue("product_id", productId);
 
             await cmd.ExecuteNonQueryAsync();
@@ -92,10 +93,10 @@ public sealed class GetCartsWithProductsProjectorRepository : IDisposable
         }
     }
 
-    public async Task RemoveProductFromCart(Guid cartId, Guid productId, long sequenceNumber)
+    public async Task RemoveItemFromCart(Guid cartId, Guid itemId, long sequenceNumber)
     {
         var sql = $@"DELETE FROM {_schema}.get_carts_with_products_read_model 
-                        WHERE cart_id = @cart_id AND product_id = @product_id";
+                        WHERE cart_id = @cart_id AND item_id = @item_id";
 
         try
         {
@@ -104,7 +105,7 @@ public sealed class GetCartsWithProductsProjectorRepository : IDisposable
             using var cmd = new NpgsqlCommand(sql);
             cmd.Connection = _connection;
             cmd.Parameters.AddWithValue("cart_id", cartId);
-            cmd.Parameters.AddWithValue("product_id", productId);
+            cmd.Parameters.AddWithValue("item_id", itemId);
 
             await cmd.ExecuteNonQueryAsync();
 
@@ -118,7 +119,7 @@ public sealed class GetCartsWithProductsProjectorRepository : IDisposable
         }
     }
 
-    public async Task RemoveAllProductsFromCart(Guid cartId, long sequenceNumber)
+    public async Task RemoveAllItemsFromCart(Guid cartId, long sequenceNumber)
     {
         var sql = $@"DELETE FROM {_schema}.get_carts_with_products_read_model 
                         WHERE cart_id = @cart_id";
