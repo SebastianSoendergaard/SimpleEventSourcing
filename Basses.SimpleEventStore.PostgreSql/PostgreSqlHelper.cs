@@ -1,13 +1,103 @@
 ﻿using Basses.SimpleEventStore.EventStore;
 using Npgsql;
+using NpgsqlTypes;
 
 namespace Basses.SimpleEventStore.PostgreSql;
 
 public class PostgreSqlHelper
 {
-    public static void EnsureDatabase(string connectionString)
+    private readonly string _connectionString;
+
+    public PostgreSqlHelper(string connectionString)
     {
-        var connectionProperties = connectionString
+        _connectionString = connectionString;
+    }
+
+    public async Task<int> ExecuteAsync(string sql, IEnumerable<PostgreSqlParameter> parameters)
+    {
+        using var connection = new NpgsqlConnection(_connectionString);
+        return await ExecuteAsync(sql, parameters, connection);
+    }
+
+    public async Task<int> ExecuteAsync(string sql, IEnumerable<PostgreSqlParameter> parameters, NpgsqlConnection connection, NpgsqlTransaction? transaction = null)
+    {
+        if (connection.State != System.Data.ConnectionState.Open)
+        {
+            await connection.OpenAsync();
+        }
+
+        using var cmd = new NpgsqlCommand(sql, connection, transaction);
+        AddParametersToCommand(cmd, parameters);
+        return await cmd.ExecuteNonQueryAsync();
+    }
+
+    public async Task Transaction(Func<NpgsqlConnection, NpgsqlTransaction, Task> execute)
+    {
+        using var connection = new NpgsqlConnection(_connectionString);
+        if (connection.State != System.Data.ConnectionState.Open)
+        {
+            await connection.OpenAsync();
+        }
+
+        using var transaction = connection.BeginTransaction();
+
+        try
+        {
+            await execute(connection, transaction);
+            await transaction.CommitAsync();
+        }
+        catch (Exception)
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
+
+    public async Task<IEnumerable<T>> QueryAsync<T>(string sql, IEnumerable<PostgreSqlParameter> parameters, Func<NpgsqlDataReader, T> createResult)
+    {
+        using var connection = new NpgsqlConnection(_connectionString);
+        if (connection.State != System.Data.ConnectionState.Open)
+        {
+            await connection.OpenAsync();
+        }
+
+        using var cmd = new NpgsqlCommand(sql, connection);
+        AddParametersToCommand(cmd, parameters);
+        using var reader = await cmd.ExecuteReaderAsync();
+
+        List<T> results = [];
+        while (reader.Read())
+        {
+            results.Add(createResult(reader));
+        }
+
+        return results;
+    }
+
+    public async Task<T?> QuerySingleOrDefaultAsync<T>(string sql, IEnumerable<PostgreSqlParameter> parameters, Func<NpgsqlDataReader, T> createResult)
+    {
+        var results = await QueryAsync(sql, parameters, createResult);
+        return results.SingleOrDefault();
+    }
+
+    private void AddParametersToCommand(NpgsqlCommand command, IEnumerable<PostgreSqlParameter> parameters)
+    {
+        foreach (var parameter in parameters)
+        {
+            if (parameter.Type != null)
+            {
+                command.Parameters.AddWithValue(parameter.Name, parameter.Type.Value, parameter.Value);
+            }
+            else
+            {
+                command.Parameters.AddWithValue(parameter.Name, parameter.Value);
+            }
+        }
+    }
+
+    public void EnsureDatabase()
+    {
+        var connectionProperties = _connectionString
             .Split(';')
             .Select(x => x.Trim())
             .Where(x => !string.IsNullOrWhiteSpace(x))
@@ -54,4 +144,24 @@ public class PostgreSqlHelper
             throw new EventStoreException("Could not create database", ex);
         }
     }
+}
+
+public record PostgreSqlParameter
+{
+    public PostgreSqlParameter(string name, object value)
+    {
+        Name = name;
+        Value = value;
+    }
+
+    public PostgreSqlParameter(string name, object value, NpgsqlDbType type)
+    {
+        Name = name;
+        Value = value;
+        Type = type;
+    }
+
+    public string Name { get; }
+    public object Value { get; }
+    public NpgsqlDbType? Type { get; }
 }

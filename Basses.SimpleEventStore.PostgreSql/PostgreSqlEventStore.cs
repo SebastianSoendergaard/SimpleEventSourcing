@@ -4,9 +4,9 @@ using NpgsqlTypes;
 
 namespace Basses.SimpleEventStore.PostgreSql;
 
-public class PostgreSqlEventStore : IEventStore, IDisposable
+public class PostgreSqlEventStore : IEventStore
 {
-    private readonly NpgsqlConnection _connection;
+    private readonly PostgreSqlHelper _sqlHelper;
     private readonly string _schema;
     private readonly string _eventStoreName;
     private readonly IEventSerializer _serializer;
@@ -15,15 +15,13 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
 
     public PostgreSqlEventStore(string connectionString, string schema, string tableName, IEventSerializer? eventSerializer = null)
     {
+        _sqlHelper = new PostgreSqlHelper(connectionString);
         _schema = schema;
         _eventStoreName = tableName;
         _serializer = eventSerializer ?? new DefaultEventSerializer();
         _upcastManager = new UpcastManager(_serializer);
 
-        PostgreSqlHelper.EnsureDatabase(connectionString);
-
-        _connection = new NpgsqlConnection(connectionString);
-        _connection.Open();
+        _sqlHelper.EnsureDatabase();
 
         CreateEventStoreTableIfNotExists();
     }
@@ -35,24 +33,24 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
 
         try
         {
-            using var transaction = _connection.BeginTransaction();
-
-            foreach (var @event in events)
+            await _sqlHelper.Transaction(async (conn, tx) =>
             {
-                var serializedEvent = _serializer.Serialize(@event);
+                foreach (var @event in events)
+                {
+                    var serializedEvent = _serializer.Serialize(@event);
 
-                using var cmd = new NpgsqlCommand(sql);
-                cmd.Connection = _connection;
-                cmd.Parameters.AddWithValue("streamId", streamId);
-                cmd.Parameters.AddWithValue("version", version++);
-                cmd.Parameters.AddWithValue("timestamp", DateTimeOffset.UtcNow);
-                cmd.Parameters.AddWithValue("eventType", serializedEvent.EventType);
-                cmd.Parameters.AddWithValue("eventJson", NpgsqlDbType.Jsonb, serializedEvent.EventPayload);
+                    var parameters = new[]
+                    {
+                        new PostgreSqlParameter("streamId", streamId),
+                        new PostgreSqlParameter("version", version++),
+                        new PostgreSqlParameter("timestamp", DateTimeOffset.UtcNow),
+                        new PostgreSqlParameter("eventType", serializedEvent.EventType),
+                        new PostgreSqlParameter("eventJson", serializedEvent.EventPayload, NpgsqlDbType.Jsonb)
+                    };
 
-                await cmd.ExecuteNonQueryAsync();
-            }
-
-            transaction.Commit();
+                    await _sqlHelper.ExecuteAsync(sql, parameters, conn, tx);
+                }
+            });
         }
         catch (PostgresException ex) when (ex.Message.Contains("unique_stream_version"))
         {
@@ -71,20 +69,11 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
 
     public async Task<long> GetHeadSequenceNumber()
     {
-        var sql = $"SELECT MAX(sequence_number) FROM {_schema}.{_eventStoreName}";
-        long maxSequenceNumber = 0;
+        var sql = $"SELECT COALESCE(MAX(sequence_number), 0) FROM {_schema}.{_eventStoreName}";
 
         try
         {
-            using var cmd = new NpgsqlCommand(sql);
-            cmd.Connection = _connection;
-            using (var reader = await cmd.ExecuteReaderAsync())
-            {
-                while (reader.Read())
-                {
-                    maxSequenceNumber = reader.GetInt64(0);
-                }
-            }
+            var maxSequenceNumber = await _sqlHelper.QuerySingleOrDefaultAsync(sql, [], reader => reader.GetInt64(0));
             return maxSequenceNumber;
         }
         catch (Exception ex)
@@ -100,10 +89,12 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
                         WHERE stream_id = @streamId
                         ORDER BY sequence_number";
 
-        using var cmd = new NpgsqlCommand(sql);
-        cmd.Parameters.AddWithValue("streamId", streamId);
+        var parameters = new[]
+        {
+            new PostgreSqlParameter("streamId", streamId)
+        };
 
-        return await LoadEventsFromDatabase(cmd);
+        return await LoadEventsFromDatabase(sql, parameters);
     }
 
     public async Task<IEnumerable<EventEntry>> LoadEvents(string streamId, long startSequenceNumber, int max)
@@ -115,12 +106,14 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
                         ORDER BY sequence_number
                         LIMIT @max";
 
-        using var cmd = new NpgsqlCommand(sql);
-        cmd.Parameters.AddWithValue("streamId", streamId);
-        cmd.Parameters.AddWithValue("startSequenceNumber", startSequenceNumber);
-        cmd.Parameters.AddWithValue("max", max);
+        var parameters = new[]
+        {
+            new PostgreSqlParameter("streamId", streamId),
+            new PostgreSqlParameter("startSequenceNumber", startSequenceNumber),
+            new PostgreSqlParameter("max", max)
+        };
 
-        return await LoadEventsFromDatabase(cmd);
+        return await LoadEventsFromDatabase(sql, parameters);
     }
 
     public async Task<IEnumerable<EventEntry>> LoadEvents(long startSequenceNumber, int max)
@@ -131,22 +124,20 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
                         ORDER BY sequence_number
                         LIMIT @max";
 
-        using var cmd = new NpgsqlCommand(sql);
-        cmd.Parameters.AddWithValue("startSequenceNumber", startSequenceNumber);
-        cmd.Parameters.AddWithValue("max", max);
+        var parameters = new[]
+        {
+            new PostgreSqlParameter("startSequenceNumber", startSequenceNumber),
+            new PostgreSqlParameter("max", max)
+        };
 
-        return await LoadEventsFromDatabase(cmd);
+        return await LoadEventsFromDatabase(sql, parameters);
     }
 
-    private async Task<IEnumerable<EventEntry>> LoadEventsFromDatabase(NpgsqlCommand cmd)
+    private async Task<IEnumerable<EventEntry>> LoadEventsFromDatabase(string sql, IEnumerable<PostgreSqlParameter> parameters)
     {
-        List<EventEntry> events = [];
-
         try
         {
-            cmd.Connection = _connection;
-            using var reader = await cmd.ExecuteReaderAsync();
-            while (reader.Read())
+            var events = await _sqlHelper.QueryAsync(sql, parameters, reader =>
             {
                 var eventType = reader.GetString(4);
                 var eventJson = reader.GetString(5);
@@ -162,29 +153,22 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
                     @event
                 );
 
-                events.Add(eventEntry);
-            }
+                return eventEntry;
+            });
+
+            return events;
         }
         catch (Exception ex)
         {
             throw new EventStoreException("Could not load events", ex);
         }
-
-        return events;
     }
 
     private void CreateEventStoreTableIfNotExists()
     {
-        try
-        {
-            using var transaction = _connection.BeginTransaction();
+        var sql1 = $"CREATE SCHEMA IF NOT EXISTS {_schema}";
 
-            var sql1 = $"CREATE SCHEMA IF NOT EXISTS {_schema}";
-            using var cmd1 = new NpgsqlCommand(sql1);
-            cmd1.Connection = _connection;
-            cmd1.ExecuteNonQuery();
-
-            var sql2 = $@"CREATE TABLE IF NOT EXISTS {_schema}.{_eventStoreName} (
+        var sql2 = $@"CREATE TABLE IF NOT EXISTS {_schema}.{_eventStoreName} (
                             sequence_number bigserial, 
                             stream_id varchar(100),
                             version integer,
@@ -194,16 +178,19 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
                             PRIMARY KEY (sequence_number),
                             CONSTRAINT {_eventStoreName}_unique_stream_version UNIQUE (stream_id, version)
                         );";
-            using var cmd2 = new NpgsqlCommand(sql2);
-            cmd1.Connection = _connection;
-            cmd1.ExecuteNonQuery();
 
-            var sql3 = $@"CREATE INDEX IF NOT EXISTS {_eventStoreName}_index_stream_id ON {_schema}.{_eventStoreName}(stream_id);";
-            using var cmd3 = new NpgsqlCommand(sql3);
-            cmd2.Connection = _connection;
-            cmd2.ExecuteNonQuery();
+        var sql3 = $@"CREATE INDEX IF NOT EXISTS {_eventStoreName}_index_stream_id ON {_schema}.{_eventStoreName}(stream_id);";
 
-            transaction.Commit();
+        try
+        {
+            _sqlHelper.Transaction(async (conn, tx) =>
+            {
+                await _sqlHelper.ExecuteAsync(sql1, [], conn, tx);
+                await _sqlHelper.ExecuteAsync(sql2, [], conn, tx);
+                await _sqlHelper.ExecuteAsync(sql3, [], conn, tx);
+            })
+            .GetAwaiter()
+            .GetResult();
         }
         catch (Exception ex)
         {
@@ -219,11 +206,5 @@ public class PostgreSqlEventStore : IEventStore, IDisposable
     public void RegisterForEventsAppendedNotifications(Func<Task> onEventsAppended)
     {
         _onEventsAppended += onEventsAppended;
-    }
-
-    public void Dispose()
-    {
-        _connection.Close();
-        _connection.Dispose();
     }
 }

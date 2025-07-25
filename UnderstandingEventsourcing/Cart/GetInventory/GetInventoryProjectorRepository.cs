@@ -1,38 +1,33 @@
 ﻿using Basses.SimpleEventStore.EventStore;
-using Npgsql;
+using Basses.SimpleEventStore.PostgreSql;
 
 namespace UnderstandingEventsourcingExample.Cart.GetInventory;
 
-public sealed class GetInventoryProjectorRepository : IDisposable
+public sealed class GetInventoryProjectorRepository
 {
-    private NpgsqlConnection _connection;
+    private readonly PostgreSqlHelper _sqlHelper;
     private readonly string _projectorName;
     private readonly string _schema;
 
     public GetInventoryProjectorRepository(string projectorName, string connectionString, string schema)
     {
-        _connection = new NpgsqlConnection(connectionString);
-        _connection.Open();
+        _sqlHelper = new PostgreSqlHelper(connectionString);
         _projectorName = projectorName;
         _schema = schema;
     }
 
     public async Task<long> GetLastProcessedSequenceNumber()
     {
-        var sql = $"SELECT last_processed_sequence_number FROM {_schema}.read_model_projector_state WHERE projector_name = '{_projectorName}'";
-        long sequenceNumber = 0;
+        var sql = $"SELECT last_processed_sequence_number FROM {_schema}.read_model_projector_state WHERE projector_name = @projector_name";
+
+        var parameters = new[]
+        {
+            new PostgreSqlParameter("projector_name", _projectorName)
+        };
 
         try
         {
-            using var cmd = new NpgsqlCommand(sql);
-            cmd.Connection = _connection;
-            using (var reader = await cmd.ExecuteReaderAsync())
-            {
-                while (reader.Read())
-                {
-                    sequenceNumber = reader.GetInt64(0);
-                }
-            }
+            var sequenceNumber = await _sqlHelper.QuerySingleOrDefaultAsync(sql, parameters, reader => reader.GetInt64(0));
             return sequenceNumber;
         }
         catch (Exception ex)
@@ -43,20 +38,16 @@ public sealed class GetInventoryProjectorRepository : IDisposable
 
     public async Task<InventoryReadModel> GetByProductId(Guid productId)
     {
-        var sql = $"SELECT inventory FROM {_schema}.get_inventory_read_model WHERE product_id = '{productId}'";
-        int inventory = 0;
+        var sql = $"SELECT inventory FROM {_schema}.get_inventory_read_model WHERE product_id = @product_id";
+
+        var parameters = new[]
+        {
+            new PostgreSqlParameter("product_id", productId)
+        };
 
         try
         {
-            using var cmd = new NpgsqlCommand(sql);
-            cmd.Connection = _connection;
-            using (var reader = await cmd.ExecuteReaderAsync())
-            {
-                while (reader.Read())
-                {
-                    inventory = reader.GetInt32(0);
-                }
-            }
+            var inventory = await _sqlHelper.QuerySingleOrDefaultAsync(sql, parameters, reader => reader.GetInt32(0));
             return new InventoryReadModel(productId, inventory);
         }
         catch (Exception ex)
@@ -81,36 +72,31 @@ public sealed class GetInventoryProjectorRepository : IDisposable
 
         try
         {
-            using var transaction = _connection.BeginTransaction();
-
-            foreach (var inventory in inventories)
+            await _sqlHelper.Transaction(async (conn, tx) =>
             {
-                using var cmd1 = new NpgsqlCommand(sql1);
-                cmd1.Connection = _connection;
-                cmd1.Parameters.AddWithValue("product_id", inventory.ProductId);
-                cmd1.Parameters.AddWithValue("inventory", inventory.Inventory);
+                foreach (var inventory in inventories)
+                {
+                    var parameters1 = new[]
+                    {
+                        new PostgreSqlParameter("product_id", inventory.ProductId),
+                        new PostgreSqlParameter("inventory", inventory.Inventory)
+                    };
 
-                await cmd1.ExecuteNonQueryAsync();
-            }
+                    await _sqlHelper.ExecuteAsync(sql1, parameters1, conn, tx);
+                }
 
-            using var cmd2 = new NpgsqlCommand(sql2);
-            cmd2.Connection = _connection;
-            cmd2.Parameters.AddWithValue("projector_name", _projectorName);
-            cmd2.Parameters.AddWithValue("last_processed_sequence_number", sequenceNumber);
+                var parameters2 = new[]
+                {
+                    new PostgreSqlParameter("projector_name", _projectorName),
+                    new PostgreSqlParameter("last_processed_sequence_number", sequenceNumber)
+                };
 
-            await cmd2.ExecuteNonQueryAsync();
-
-            transaction.Commit();
+                await _sqlHelper.ExecuteAsync(sql2, parameters2, conn, tx);
+            });
         }
         catch (Exception ex)
         {
             throw new EventStoreException("Could not upsert inventories", ex);
         }
-    }
-
-    public void Dispose()
-    {
-        _connection.Close();
-        _connection.Dispose();
     }
 }

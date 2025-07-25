@@ -5,25 +5,24 @@ using UnderstandingEventsourcingExample.Cart.Domain;
 namespace UnderstandingEventsourcingExample.Cart.GetInventory;
 
 public class GetInventoryProjector : Projector,
-    IProjectionEventHandler<InventoryChangedEvent>, IDisposable
+    IProjectionEventHandler<InventoryChangedEvent>
 {
-    private GetInventoryProjectorRepository? _repository;
+    private readonly GetInventoryProjectorRepository _repository;
     private List<InventoryReadModel> _inventories = [];
-    private readonly IOptions<CartOptions> _options;
 
     public GetInventoryProjector(IOptions<CartOptions> options)
     {
-        _options = options;
+        _repository = new GetInventoryProjectorRepository(Name, options.Value.ConnectionString, options.Value.Schema);
     }
 
     public Task<InventoryReadModel> GetReadModel(Guid ProductId)
     {
-        return GetRepository().GetByProductId(ProductId);
+        return _repository.GetByProductId(ProductId);
     }
 
     protected override Task<long> LoadSequenceNumber()
     {
-        return GetRepository().GetLastProcessedSequenceNumber();
+        return _repository.GetLastProcessedSequenceNumber();
     }
 
     protected override Task UpdateStarting()
@@ -34,27 +33,13 @@ public class GetInventoryProjector : Projector,
 
     protected override Task UpdateComplete(long sequenceNumber)
     {
-        return GetRepository().Upsert(sequenceNumber, _inventories);
+        return _repository.Upsert(sequenceNumber, _inventories);
     }
 
     public Task UpdateWith(InventoryChangedEvent @event, EventData eventData)
     {
         _inventories.Add(new InventoryReadModel(@event.ProductId, @event.Inventory));
         return Task.CompletedTask;
-    }
-
-    private GetInventoryProjectorRepository GetRepository()
-    {
-        if (_repository == null)
-        {
-            _repository = new GetInventoryProjectorRepository(Name, _options.Value.ConnectionString, _options.Value.Schema);
-        }
-        return _repository;
-    }
-
-    public void Dispose()
-    {
-        _repository?.Dispose();
     }
 }
 

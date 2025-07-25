@@ -1,38 +1,34 @@
 ﻿using Basses.SimpleEventStore.EventStore;
+using Basses.SimpleEventStore.PostgreSql;
 using Npgsql;
 
 namespace UnderstandingEventsourcingExample.Cart.GetCartsWithProducts;
 
-public sealed class GetCartsWithProductsProjectorRepository : IDisposable
+public sealed class GetCartsWithProductsProjectorRepository
 {
-    private NpgsqlConnection _connection;
+    private readonly PostgreSqlHelper _sqlHelper;
     private readonly string _projectorName;
     private readonly string _schema;
 
     public GetCartsWithProductsProjectorRepository(string projectorName, string connectionString, string schema)
     {
-        _connection = new NpgsqlConnection(connectionString);
-        _connection.Open();
+        _sqlHelper = new PostgreSqlHelper(connectionString);
         _projectorName = projectorName;
         _schema = schema;
     }
 
     public async Task<long> GetLastProcessedSequenceNumber()
     {
-        var sql = $"SELECT last_processed_sequence_number FROM {_schema}.read_model_projector_state WHERE projector_name = '{_projectorName}'";
-        long sequenceNumber = 0;
+        var sql = $"SELECT last_processed_sequence_number FROM {_schema}.read_model_projector_state WHERE projector_name = @projector_name";
+
+        var parameters = new[]
+        {
+            new PostgreSqlParameter("projector_name", _projectorName)
+        };
 
         try
         {
-            using var cmd = new NpgsqlCommand(sql);
-            cmd.Connection = _connection;
-            using (var reader = await cmd.ExecuteReaderAsync())
-            {
-                while (reader.Read())
-                {
-                    sequenceNumber = reader.GetInt64(0);
-                }
-            }
+            var sequenceNumber = await _sqlHelper.QuerySingleOrDefaultAsync(sql, parameters, reader => reader.GetInt64(0));
             return sequenceNumber;
         }
         catch (Exception ex)
@@ -43,21 +39,20 @@ public sealed class GetCartsWithProductsProjectorRepository : IDisposable
 
     public async Task<IEnumerable<CartProduct>> GetByProductId(Guid productId)
     {
-        var sql = $"SELECT cart_id FROM {_schema}.get_carts_with_products_read_model WHERE product_id = '{productId}'";
-        var carts = new List<CartProduct>();
+        var sql = $"SELECT cart_id FROM {_schema}.get_carts_with_products_read_model WHERE product_id = @product_id";
+
+        var parameters = new[]
+        {
+            new PostgreSqlParameter("product_id", productId)
+        };
 
         try
         {
-            using var cmd = new NpgsqlCommand(sql);
-            cmd.Connection = _connection;
-            using (var reader = await cmd.ExecuteReaderAsync())
+            var carts = await _sqlHelper.QueryAsync(sql, parameters, reader =>
             {
-                while (reader.Read())
-                {
-                    var cartId = reader.GetGuid(0);
-                    carts.Add(new CartProduct(cartId, productId));
-                }
-            }
+                var cartId = reader.GetGuid(0);
+                return new CartProduct(cartId, productId);
+            });
             return carts;
         }
         catch (Exception ex)
@@ -71,21 +66,20 @@ public sealed class GetCartsWithProductsProjectorRepository : IDisposable
         var sql = $@"INSERT INTO {_schema}.get_carts_with_products_read_model (cart_id, item_id, product_id)
                         VALUES (@cart_id, @item_id, @product_id)";
 
+        var parameters = new[]
+        {
+            new PostgreSqlParameter("cart_id", cartId),
+            new PostgreSqlParameter("item_id", itemId),
+            new PostgreSqlParameter("product_id", productId)
+        };
+
         try
         {
-            using var transaction = _connection.BeginTransaction();
-
-            using var cmd = new NpgsqlCommand(sql);
-            cmd.Connection = _connection;
-            cmd.Parameters.AddWithValue("cart_id", cartId);
-            cmd.Parameters.AddWithValue("item_id", itemId);
-            cmd.Parameters.AddWithValue("product_id", productId);
-
-            await cmd.ExecuteNonQueryAsync();
-
-            await StoreProjectorState(sequenceNumber);
-
-            transaction.Commit();
+            await _sqlHelper.Transaction(async (conn, tx) =>
+            {
+                await _sqlHelper.ExecuteAsync(sql, parameters, conn, tx);
+                await StoreProjectorState(sequenceNumber, conn, tx);
+            });
         }
         catch (Exception ex)
         {
@@ -98,20 +92,19 @@ public sealed class GetCartsWithProductsProjectorRepository : IDisposable
         var sql = $@"DELETE FROM {_schema}.get_carts_with_products_read_model 
                         WHERE cart_id = @cart_id AND item_id = @item_id";
 
+        var parameters = new[]
+        {
+            new PostgreSqlParameter("cart_id", cartId),
+            new PostgreSqlParameter("item_id", itemId)
+        };
+
         try
         {
-            using var transaction = _connection.BeginTransaction();
-
-            using var cmd = new NpgsqlCommand(sql);
-            cmd.Connection = _connection;
-            cmd.Parameters.AddWithValue("cart_id", cartId);
-            cmd.Parameters.AddWithValue("item_id", itemId);
-
-            await cmd.ExecuteNonQueryAsync();
-
-            await StoreProjectorState(sequenceNumber);
-
-            transaction.Commit();
+            await _sqlHelper.Transaction(async (conn, tx) =>
+            {
+                await _sqlHelper.ExecuteAsync(sql, parameters, conn, tx);
+                await StoreProjectorState(sequenceNumber, conn, tx);
+            });
         }
         catch (Exception ex)
         {
@@ -124,19 +117,18 @@ public sealed class GetCartsWithProductsProjectorRepository : IDisposable
         var sql = $@"DELETE FROM {_schema}.get_carts_with_products_read_model 
                         WHERE cart_id = @cart_id";
 
+        var parameters = new[]
+        {
+            new PostgreSqlParameter("cart_id", cartId)
+        };
+
         try
         {
-            using var transaction = _connection.BeginTransaction();
-
-            using var cmd = new NpgsqlCommand(sql);
-            cmd.Connection = _connection;
-            cmd.Parameters.AddWithValue("cart_id", cartId);
-
-            await cmd.ExecuteNonQueryAsync();
-
-            await StoreProjectorState(sequenceNumber);
-
-            transaction.Commit();
+            await _sqlHelper.Transaction(async (conn, tx) =>
+            {
+                await _sqlHelper.ExecuteAsync(sql, parameters, conn, tx);
+                await StoreProjectorState(sequenceNumber, conn, tx);
+            });
         }
         catch (Exception ex)
         {
@@ -144,7 +136,7 @@ public sealed class GetCartsWithProductsProjectorRepository : IDisposable
         }
     }
 
-    private async Task StoreProjectorState(long sequenceNumber)
+    private async Task StoreProjectorState(long sequenceNumber, NpgsqlConnection connection, NpgsqlTransaction transaction)
     {
         var sql = $@"INSERT INTO {_schema}.read_model_projector_state (projector_name, last_processed_sequence_number)
                         VALUES (@projector_name, @last_processed_sequence_number)
@@ -152,17 +144,12 @@ public sealed class GetCartsWithProductsProjectorRepository : IDisposable
                         DO UPDATE SET
                             last_processed_sequence_number = EXCLUDED.last_processed_sequence_number;";
 
-        using var cmd = new NpgsqlCommand(sql);
-        cmd.Connection = _connection;
-        cmd.Parameters.AddWithValue("projector_name", _projectorName);
-        cmd.Parameters.AddWithValue("last_processed_sequence_number", sequenceNumber);
+        var parameters = new[]
+        {
+            new PostgreSqlParameter("projector_name", _projectorName),
+            new PostgreSqlParameter("last_processed_sequence_number", sequenceNumber)
+        };
 
-        await cmd.ExecuteNonQueryAsync();
-    }
-
-    public void Dispose()
-    {
-        _connection.Close();
-        _connection.Dispose();
+        await _sqlHelper.ExecuteAsync(sql, parameters, connection, transaction);
     }
 }

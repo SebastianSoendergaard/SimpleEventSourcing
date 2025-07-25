@@ -1,25 +1,23 @@
 ﻿using Basses.SimpleEventStore.EventStore;
 using Basses.SimpleEventStore.EventSubscriber;
-using Npgsql;
 
 namespace Basses.SimpleEventStore.PostgreSql;
 
 public abstract class PostgreSqlEventSubscriberStateStore : IEventSubscriberStateStore
 {
-    private readonly NpgsqlConnection _connection;
+    private readonly PostgreSqlHelper _sqlHelper;
     private readonly string _schema;
     private readonly string _stateStoreName;
     private readonly string _subscriberTypeName;
 
     public PostgreSqlEventSubscriberStateStore(string connectionString, string schema, string tableName, string subscriberTypeName)
     {
+        _sqlHelper = new PostgreSqlHelper(connectionString);
         _schema = schema;
         _stateStoreName = tableName;
         _subscriberTypeName = subscriberTypeName;
-        PostgreSqlHelper.EnsureDatabase(connectionString);
 
-        _connection = new NpgsqlConnection(connectionString);
-        _connection.Open();
+        _sqlHelper.EnsureDatabase();
 
         CreateStateStoreTableIfNotExists();
     }
@@ -36,34 +34,31 @@ public abstract class PostgreSqlEventSubscriberStateStore : IEventSubscriberStat
                         FROM {_schema}.{_stateStoreName} 
                         WHERE {_subscriberTypeName}_name=@subscriber_name";
 
-        var state = new EventSubscriberProcessingState(DateTimeOffset.MinValue, 0);
+        var parameters = new[]
+        {
+            new PostgreSqlParameter("subscriber_name", subscriber.Name)
+        };
 
         try
         {
-            using var cmd = new NpgsqlCommand(sql);
-            cmd.Connection = _connection;
-            cmd.Parameters.AddWithValue("subscriber_name", subscriber.Name);
-            using (var reader = await cmd.ExecuteReaderAsync())
+            var state = await _sqlHelper.QuerySingleOrDefaultAsync(sql, parameters, reader =>
             {
-                while (reader.Read())
+                var latestSuccessfulProcessingTime = reader.GetFieldValue<DateTimeOffset>(0);
+                var confirmedSequenceNumber = reader.GetInt32(1);
+
+                EventSubscriberProcessingError? error = null;
+                if (!reader.IsDBNull(2))
                 {
-                    var latestSuccessfulProcessingTime = reader.GetFieldValue<DateTimeOffset>(0);
-                    var confirmedSequenceNumber = reader.GetInt32(1);
-
-                    EventSubscriberProcessingError? error = null;
-                    if (!reader.IsDBNull(2))
-                    {
-                        var errorMessage = reader.GetString(2);
-                        var stackTrace = reader.GetString(3);
-                        var processingAttempts = reader.GetInt32(4);
-                        var latestRetryTime = reader.GetFieldValue<DateTimeOffset>(5);
-                        error = new EventSubscriberProcessingError(errorMessage, stackTrace, processingAttempts, latestRetryTime);
-                    }
-
-                    state = new EventSubscriberProcessingState(latestSuccessfulProcessingTime, confirmedSequenceNumber, error);
+                    var errorMessage = reader.GetString(2);
+                    var stackTrace = reader.GetString(3);
+                    var processingAttempts = reader.GetInt32(4);
+                    var latestRetryTime = reader.GetFieldValue<DateTimeOffset>(5);
+                    error = new EventSubscriberProcessingError(errorMessage, stackTrace, processingAttempts, latestRetryTime);
                 }
-            }
-            return state;
+
+                return new EventSubscriberProcessingState(latestSuccessfulProcessingTime, confirmedSequenceNumber, error);
+            });
+            return state ?? new EventSubscriberProcessingState(DateTimeOffset.MinValue, 0);
         }
         catch (Exception ex)
         {
@@ -83,42 +78,44 @@ public abstract class PostgreSqlEventSubscriberStateStore : IEventSubscriberStat
                             latest_retry_time=@retry_time
                         WHERE {_subscriberTypeName}_name=@subscriber_name;";
 
+        var parameters = new[]
+        {
+            new PostgreSqlParameter("subscriber_name", subscriber.Name),
+            new PostgreSqlParameter("processing_time", state.LatestSuccessfulProcessingTime),
+            new PostgreSqlParameter("confirmed_sequence_number", state.ConfirmedSequenceNumber),
+            new PostgreSqlParameter("error_message", (object?)state.ProcessingError?.ErrorMessage ?? DBNull.Value),
+            new PostgreSqlParameter("stacktrace", (object?)state.ProcessingError?.Stacktrace ?? DBNull.Value),
+            new PostgreSqlParameter("attempts", (object?)state.ProcessingError?.ProcessingAttempts ?? DBNull.Value),
+            new PostgreSqlParameter("retry_time", (object?)state.ProcessingError?.LatestRetryTime ?? DBNull.Value)
+        };
+
         try
         {
-            using var cmd1 = new NpgsqlCommand(sql);
-            cmd1.Connection = _connection;
-            cmd1.Parameters.AddWithValue("subscriber_name", subscriber.Name);
-            cmd1.Parameters.AddWithValue("processing_time", state.LatestSuccessfulProcessingTime);
-            cmd1.Parameters.AddWithValue("confirmed_sequence_number", state.ConfirmedSequenceNumber);
-            cmd1.Parameters.AddWithValue("error_message", (object?)state.ProcessingError?.ErrorMessage ?? DBNull.Value);
-            cmd1.Parameters.AddWithValue("stacktrace", (object?)state.ProcessingError?.Stacktrace ?? DBNull.Value);
-            cmd1.Parameters.AddWithValue("attempts", (object?)state.ProcessingError?.ProcessingAttempts ?? DBNull.Value);
-            cmd1.Parameters.AddWithValue("retry_time", (object?)state.ProcessingError?.LatestRetryTime ?? DBNull.Value);
-
-            await cmd1.ExecuteNonQueryAsync();
+            await _sqlHelper.ExecuteAsync(sql, parameters);
         }
         catch (Exception ex)
         {
-            throw new EventStoreException("Could not upsert subscriber", ex);
+            throw new EventStoreException("Could not update subscriber processing state", ex);
         }
     }
 
     public async Task UpsertSubscriber(IEventSubscriber subscriber)
     {
-        var sql1 = $@"INSERT INTO {_schema}.{_stateStoreName} ({_subscriberTypeName}_name, latest_successful_processing_time, confirmed_sequence_number)
+        var sql = $@"INSERT INTO {_schema}.{_stateStoreName} ({_subscriberTypeName}_name, latest_successful_processing_time, confirmed_sequence_number)
                         VALUES (@subscriber_name, @latest_successful_processing_time, @confirmed_sequence_number)
                         ON CONFLICT ({_subscriberTypeName}_name)
                         DO NOTHING;";
 
+        var parameters = new[]
+        {
+            new PostgreSqlParameter("subscriber_name", subscriber.Name),
+            new PostgreSqlParameter("latest_successful_processing_time", DateTimeOffset.MinValue),
+            new PostgreSqlParameter("confirmed_sequence_number", 0)
+        };
+
         try
         {
-            using var cmd1 = new NpgsqlCommand(sql1);
-            cmd1.Connection = _connection;
-            cmd1.Parameters.AddWithValue("subscriber_name", subscriber.Name);
-            cmd1.Parameters.AddWithValue("latest_successful_processing_time", DateTimeOffset.MinValue);
-            cmd1.Parameters.AddWithValue("confirmed_sequence_number", 0);
-
-            await cmd1.ExecuteNonQueryAsync();
+            await _sqlHelper.ExecuteAsync(sql, parameters);
         }
         catch (Exception ex)
         {
@@ -128,16 +125,9 @@ public abstract class PostgreSqlEventSubscriberStateStore : IEventSubscriberStat
 
     private void CreateStateStoreTableIfNotExists()
     {
-        try
-        {
-            using var transaction = _connection.BeginTransaction();
+        var sql1 = $"CREATE SCHEMA IF NOT EXISTS {_schema}";
 
-            var sql1 = $"CREATE SCHEMA IF NOT EXISTS {_schema}";
-            using var cmd1 = new NpgsqlCommand(sql1);
-            cmd1.Connection = _connection;
-            cmd1.ExecuteNonQuery();
-
-            var sql2 = $@"CREATE TABLE IF NOT EXISTS {_schema}.{_stateStoreName} (
+        var sql2 = $@"CREATE TABLE IF NOT EXISTS {_schema}.{_stateStoreName} (
                             {_subscriberTypeName}_name varchar(100),
                             latest_successful_processing_time timestamptz,
                             confirmed_sequence_number bigserial, 
@@ -148,16 +138,19 @@ public abstract class PostgreSqlEventSubscriberStateStore : IEventSubscriberStat
                             PRIMARY KEY ({_subscriberTypeName}_name),
                             CONSTRAINT {_stateStoreName}_unique_{_subscriberTypeName}_name UNIQUE ({_subscriberTypeName}_name)
                         );";
-            using var cmd2 = new NpgsqlCommand(sql2);
-            cmd2.Connection = _connection;
-            cmd2.ExecuteNonQuery();
 
-            var sql3 = $@"CREATE INDEX IF NOT EXISTS {_stateStoreName}_index_{_subscriberTypeName}_name ON {_schema}.{_stateStoreName}({_subscriberTypeName}_name);";
-            using var cmd3 = new NpgsqlCommand(sql3);
-            cmd3.Connection = _connection;
-            cmd3.ExecuteNonQuery();
+        var sql3 = $@"CREATE INDEX IF NOT EXISTS {_stateStoreName}_index_{_subscriberTypeName}_name ON {_schema}.{_stateStoreName}({_subscriberTypeName}_name);";
 
-            transaction.Commit();
+        try
+        {
+            _sqlHelper.Transaction(async (conn, tx) =>
+            {
+                await _sqlHelper.ExecuteAsync(sql1, [], conn, tx);
+                await _sqlHelper.ExecuteAsync(sql2, [], conn, tx);
+                await _sqlHelper.ExecuteAsync(sql3, [], conn, tx);
+            })
+            .GetAwaiter()
+            .GetResult();
         }
         catch (Exception ex)
         {
