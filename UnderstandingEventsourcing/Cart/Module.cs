@@ -80,7 +80,7 @@ public static class Module
 
         services.AddScoped<CartRepository>();
         services.AddScoped<InventoryRepository>();
-        services.AddScoped<PriceRepository>();
+        services.AddScoped<PricingRepository>();
 
         services.AddScoped<IDeviceFingerPrintCalculator, DeviceFingerPrintCalculator>();
 

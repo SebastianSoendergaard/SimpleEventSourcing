@@ -3,9 +3,9 @@ using Basses.SimpleEventStore.EventStore;
 
 namespace UnderstandingEventsourcingExample.Cart.Domain;
 
-public class PriceRepository : EventSourcedRepository<PriceAggregate>
+public class PricingRepository : EventSourcedRepository<PricingAggregate>
 {
-    public PriceRepository(IEventStore eventStore) : base(eventStore)
+    public PricingRepository(IEventStore eventStore) : base(eventStore)
     {
     }
 }

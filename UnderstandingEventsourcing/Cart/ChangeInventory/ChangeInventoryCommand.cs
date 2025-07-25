@@ -11,7 +11,8 @@ public class ChangeInventoryCommandHandler(InventoryRepository repository)
 {
     public async Task Handle(ChangeInventoryCommand command)
     {
-        var inventory = await repository.TryGet(command.ProductId.ToString());
+        var inventoryId = InventoryAggregate.CreateInventoryIdFromGuid(command.ProductId);
+        var inventory = await repository.TryGet(inventoryId);
         if (inventory == null)
         {
             inventory = new InventoryAggregate(command.ProductId, command.Inventory);

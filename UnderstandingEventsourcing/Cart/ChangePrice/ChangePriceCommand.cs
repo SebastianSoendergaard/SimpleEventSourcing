@@ -8,14 +8,15 @@ public record ChangePriceCommand(
     decimal OldPrice
 );
 
-public class ChangePriceCommandHandler(PriceRepository repository)
+public class ChangePriceCommandHandler(PricingRepository repository)
 {
     public async Task Handle(ChangePriceCommand command)
     {
-        var price = await repository.TryGet(command.ProductId.ToString());
+        var pricingId = PricingAggregate.CreatePricingIdFromGuid(command.ProductId);
+        var price = await repository.TryGet(pricingId);
         if (price == null)
         {
-            price = new PriceAggregate(command.ProductId, command.NewPrice, command.OldPrice);
+            price = new PricingAggregate(command.ProductId, command.NewPrice, command.OldPrice);
             await repository.Add(price);
         }
         else

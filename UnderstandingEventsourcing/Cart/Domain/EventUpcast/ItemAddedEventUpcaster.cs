@@ -14,7 +14,6 @@ public class ItemAddedEventUpcaster : IUpcaster
     {
         var defaultDeviceFingerPrint = "default-fingerprint";
 
-
         if (eventType == typeof(ItemAddedEvent).AssemblyQualifiedName)
         {
             var e = (ItemAddedEvent)serializer.Deserialize(eventJson, eventType);

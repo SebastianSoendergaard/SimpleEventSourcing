@@ -14,11 +14,23 @@ public class InventoryAggregate : Aggregate,
 
     public void Update(int inventory)
     {
-        Apply(new InventoryChangedEvent(new Guid(Id), inventory));
+        var id = CreateGuidFromInventoryId(Id);
+        Apply(new InventoryChangedEvent(id, inventory));
     }
 
     public void On(InventoryChangedEvent @event)
     {
-        Id = @event.ProductId.ToString();
+        Id = CreateInventoryIdFromGuid(@event.ProductId);
+    }
+
+    public static string CreateInventoryIdFromGuid(Guid guid)
+    {
+        return $"inventory-{guid}";
+    }
+
+    public static Guid CreateGuidFromInventoryId(string inventoryId)
+    {
+        var id = inventoryId.Replace("inventory-", "");
+        return new Guid(id);
     }
 }
