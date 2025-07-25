@@ -1,6 +1,6 @@
 ﻿using Basses.SimpleEventStore.EventStore;
 
-namespace EventSourcing.Test;
+namespace Basses.SimpleEventStore.Tests.EventStore;
 
 public sealed class EventStoreTests
     : IClassFixture<InMemoryStoreFixture>, IClassFixture<FileStoreFixture>, IClassFixture<PostgreSqlStoreFixture>
@@ -25,7 +25,7 @@ public sealed class EventStoreTests
         var streamId = Guid.NewGuid().ToString();
         var @event = new CreatedEvent(1, "abc");
 
-        await eventStore.AppendEvents(streamId, 1, new[] { @event });
+        await eventStore.AppendEvents(streamId, 1, [@event]);
 
         var events = await eventStore.LoadEvents(0, int.MaxValue);
 
@@ -43,7 +43,7 @@ public sealed class EventStoreTests
         var event2 = new UpdatedEvent(1, "cba");
         var event3 = new RemovedEvent(1);
 
-        await eventStore.AppendEvents(streamId, 1, new object[] { event1, event2, event3 });
+        await eventStore.AppendEvents(streamId, 1, [event1, event2, event3]);
 
         var events = await eventStore.LoadEvents(0, int.MaxValue);
 
@@ -58,15 +58,15 @@ public sealed class EventStoreTests
 
         var streamId1 = Guid.NewGuid().ToString();
         var event1 = new CreatedEvent(1, "abc");
-        await eventStore.AppendEvents(streamId1, 1, new object[] { event1 });
+        await eventStore.AppendEvents(streamId1, 1, [event1]);
 
         var streamId2 = Guid.NewGuid().ToString();
         var event2 = new CreatedEvent(2, "abc");
-        await eventStore.AppendEvents(streamId2, 1, new object[] { event2 });
+        await eventStore.AppendEvents(streamId2, 1, [event2]);
 
         var streamId3 = Guid.NewGuid().ToString();
         var event3 = new CreatedEvent(3, "abc");
-        await eventStore.AppendEvents(streamId3, 1, new object[] { event3 });
+        await eventStore.AppendEvents(streamId3, 1, [event3]);
 
         var events = await eventStore.LoadEvents(0, int.MaxValue);
 
@@ -84,18 +84,102 @@ public sealed class EventStoreTests
         var event2 = new UpdatedEvent(1, "cba");
         var event3 = new RemovedEvent(1);
 
-        await eventStore.AppendEvents(streamId, 1, new[] { event1 });
+        await eventStore.AppendEvents(streamId, 1, [event1]);
         var head = await eventStore.GetHeadSequenceNumber();
         Assert.Equal(1, head);
 
-        await eventStore.AppendEvents(streamId, 2, new[] { event2 });
+        await eventStore.AppendEvents(streamId, 2, [event2]);
         head = await eventStore.GetHeadSequenceNumber();
         Assert.Equal(2, head);
 
-        await eventStore.AppendEvents(streamId, 3, new[] { event3 });
+        await eventStore.AppendEvents(streamId, 3, [event3]);
         head = await eventStore.GetHeadSequenceNumber();
         Assert.Equal(3, head);
     }
+
+    [Theory]
+    [MemberData(nameof(EventStoreFactory))]
+    public async Task CanLoadFullStream(Func<IEventStore> eventStoreFactory)
+    {
+        var eventStore = eventStoreFactory();
+
+        var streamId = Guid.NewGuid().ToString();
+        var event1 = new CreatedEvent(1, "abc");
+        var event2 = new UpdatedEvent(1, "cba");
+        var event3 = new RemovedEvent(1);
+
+        await eventStore.AppendEvents(streamId, 1, [event1]);
+        await eventStore.AppendEvents(streamId, 2, [event2]);
+        await eventStore.AppendEvents(streamId, 3, [event3]);
+
+        var events = await eventStore.LoadEvents(streamId);
+        Assert.Equal(3, events.Count());
+    }
+
+    [Theory]
+    [MemberData(nameof(EventStoreFactory))]
+    public async Task OnlyLoadEventsFromGivenStream(Func<IEventStore> eventStoreFactory)
+    {
+        var eventStore = eventStoreFactory();
+
+        var streamId1 = Guid.NewGuid().ToString();
+        var eventA1 = new CreatedEvent(1, "abc");
+        var eventA2 = new UpdatedEvent(1, "cba");
+        var eventA3 = new RemovedEvent(1);
+
+        var streamId2 = Guid.NewGuid().ToString();
+        var eventB1 = new CreatedEvent(2, "xyz");
+
+        await eventStore.AppendEvents(streamId1, 1, [eventA1]);
+        await eventStore.AppendEvents(streamId2, 1, [eventB1]);
+        await eventStore.AppendEvents(streamId1, 2, [eventA2]);
+        await eventStore.AppendEvents(streamId1, 3, [eventA3]);
+
+        var events = await eventStore.LoadEvents(streamId2);
+        Assert.Single(events);
+        Assert.Equal(eventB1, events.First().Event);
+    }
+
+    [Theory]
+    [MemberData(nameof(EventStoreFactory))]
+    public async Task CanLoadTailOfStream(Func<IEventStore> eventStoreFactory)
+    {
+        var eventStore = eventStoreFactory();
+
+        var streamId = Guid.NewGuid().ToString();
+        var event1 = new CreatedEvent(1, "abc");
+        var event2 = new UpdatedEvent(1, "cba");
+        var event3 = new RemovedEvent(1);
+
+        await eventStore.AppendEvents(streamId, 1, [event1]);
+        await eventStore.AppendEvents(streamId, 2, [event2]);
+        await eventStore.AppendEvents(streamId, 3, [event3]);
+
+        var events = await eventStore.LoadEvents(streamId, 3, int.MaxValue);
+        Assert.Single(events);
+        Assert.Equal(event3, events.First().Event);
+    }
+
+    [Theory]
+    [MemberData(nameof(EventStoreFactory))]
+    public async Task CanLoadMaxEventsOfStream(Func<IEventStore> eventStoreFactory)
+    {
+        var eventStore = eventStoreFactory();
+
+        var streamId = Guid.NewGuid().ToString();
+        var event1 = new CreatedEvent(1, "abc");
+        var event2 = new UpdatedEvent(1, "cba");
+        var event3 = new RemovedEvent(1);
+
+        await eventStore.AppendEvents(streamId, 1, [event1]);
+        await eventStore.AppendEvents(streamId, 2, [event2]);
+        await eventStore.AppendEvents(streamId, 3, [event3]);
+
+        var events = await eventStore.LoadEvents(streamId, 0, 1);
+        Assert.Single(events);
+        Assert.Equal(event1, events.First().Event);
+    }
+
 
     [Theory]
     [MemberData(nameof(EventStoreFactory))]
@@ -108,7 +192,7 @@ public sealed class EventStoreTests
         var streamId = Guid.NewGuid().ToString();
         var event1 = new CreatedEvent(1, "abc");
 
-        await eventStore.AppendEvents(streamId, 1, new[] { event1 });
+        await eventStore.AppendEvents(streamId, 1, [event1]);
         var events = await eventStore.LoadEvents(0, int.MaxValue);
         var @event = events.Single();
 

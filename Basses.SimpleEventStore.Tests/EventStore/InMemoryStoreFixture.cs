@@ -1,7 +1,7 @@
 ﻿using Basses.SimpleEventStore.EventStore;
 using Basses.SimpleEventStore.EventStore.InMemory;
 
-namespace EventSourcing.Test;
+namespace Basses.SimpleEventStore.Tests.EventStore;
 
 public class InMemoryStoreFixture
 {

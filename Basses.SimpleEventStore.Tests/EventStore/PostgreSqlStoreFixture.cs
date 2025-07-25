@@ -2,7 +2,7 @@
 using Basses.SimpleEventStore.PostgreSql;
 using Npgsql;
 
-namespace EventSourcing.Test;
+namespace Basses.SimpleEventStore.Tests.EventStore;
 
 public class PostgreSqlStoreFixture : IDisposable
 {
@@ -14,7 +14,7 @@ public class PostgreSqlStoreFixture : IDisposable
     public IEventStore CreateEventStore()
     {
         _storeName = Guid.NewGuid().ToString()[..8];
-        var connectionString = $"Server=localhost;Port=9002;User Id=postgres;Password=Passw0rd;Database={_dbNamePrefix}{_storeName};";
+        var connectionString = $"Server=localhost;Port=9090;User Id=postgres;Password=Passw0rd;Database={_dbNamePrefix}{_storeName};";
         var store = new PostgreSqlEventStore(connectionString, "unit_test", $"store_{_storeName}");
         _eventStores.Add(store);
         return store;
@@ -22,14 +22,9 @@ public class PostgreSqlStoreFixture : IDisposable
 
     public void Dispose()
     {
-        foreach (var store in _eventStores)
-        {
-            store.Dispose();
-        }
-
         _eventStores.Clear();
 
-        var connectionString = $"Server=localhost;Port=9002;User Id=postgres;Password=Passw0rd;";
+        var connectionString = $"Server=localhost;Port=9090;User Id=postgres;Password=Passw0rd;";
         using var connection = new NpgsqlConnection(connectionString);
         connection.Open();
 
