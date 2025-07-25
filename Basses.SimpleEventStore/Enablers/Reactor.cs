@@ -10,7 +10,7 @@ public abstract class Reactor : IReactor
 
     public virtual string Name => GetType().Name;
 
-    public async Task Update(IEnumerable<EventEntry> events)
+    public async Task Update(IEnumerable<EventEntry> events, CancellationToken cancellationToken)
     {
         await UpdateStarting();
 

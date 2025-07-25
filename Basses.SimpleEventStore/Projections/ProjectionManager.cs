@@ -1,5 +1,6 @@
 ﻿using Basses.SimpleEventStore.EventStore;
 using Basses.SimpleEventStore.EventSubscriber;
+using Microsoft.Extensions.Logging;
 
 namespace Basses.SimpleEventStore.Projections;
 
@@ -20,8 +21,8 @@ public class ProjectionManager : EventSubscriptionManager
         return base.GetProcessingState(projector);
     }
 
-    public Task RunAsync(CancellationToken stoppingToken)
+    public Task RunAsync(ILogger logger, CancellationToken stoppingToken)
     {
-        return Task.CompletedTask;
+        return NotifyAsynchronousSubscribers(logger, stoppingToken);
     }
 }

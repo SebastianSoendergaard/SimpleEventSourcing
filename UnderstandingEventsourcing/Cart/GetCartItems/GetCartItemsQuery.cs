@@ -14,7 +14,7 @@ public class GetCartItemsQueryHandler(IEventStore eventStore)
         var events = await eventStore.LoadEvents(query.CartId.ToString());
 
         var projector = new CartItemsProjector();
-        await projector.Update(events);
+        await projector.Update(events, CancellationToken.None);
 
         var readModel = projector.GetReadModel();
         if (readModel == null)

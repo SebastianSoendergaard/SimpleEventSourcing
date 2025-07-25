@@ -6,12 +6,6 @@ public class ReactionsRegister : SubscriberRegister
 {
     internal ReactionsRegister() { }
 
-    public ReactionsRegister RegisterSynchronousReactor<TReactor>() where TReactor : IReactor
-    {
-        RegisterSynchronousSubscriber<TReactor>();
-        return this;
-    }
-
     public ReactionsRegister RegisterAsynchronousReactor<TReactor>() where TReactor : IReactor
     {
         RegisterAsynchronousSubscriber<TReactor>();

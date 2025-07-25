@@ -44,7 +44,7 @@ public class QueryValidator
         if (_projector != null)
         {
             var events = await _eventStore.LoadEvents(0, int.MaxValue);
-            await _projector.Update(events);
+            await _projector.Update(events, CancellationToken.None);
         }
 
         var readModel = await queryExecution.Invoke();

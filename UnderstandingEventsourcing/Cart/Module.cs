@@ -52,14 +52,14 @@ public static class Module
         services.AddProjections(
             _ => new PostgreSqlProjectorStateStore(connectionString, schema, projectorStateStoreName),
             r => r
-            .RegisterSynchronousProjector<GetInventoryProjector>()
-            .RegisterSynchronousProjector<GetCartsWithProductsProjector>()
+            .RegisterAsynchronousProjector<GetInventoryProjector>()
+            .RegisterAsynchronousProjector<GetCartsWithProductsProjector>()
         );
         services.AddReactions(
             _ => new PostgreSqlReactorStateStore(connectionString, schema, reactorStateStoreName),
             r => r
-            .RegisterSynchronousReactor<ArchiveItemAutomationReactor>()
-            .RegisterSynchronousReactor<PublishCartAutomationReactor>()
+            .RegisterAsynchronousReactor<ArchiveItemAutomationReactor>()
+            .RegisterAsynchronousReactor<PublishCartAutomationReactor>()
         );
 
         services.AddKafkaMessageBus();

@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Basses.SimpleEventStore.EventStore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Basses.SimpleEventStore.EventSubscriber;
 
@@ -18,7 +19,7 @@ public abstract class EventSubscriptionManager
         _subscriberRegister = subscriberRegister;
         _serviceProvider = serviceProvider;
 
-        _eventStore.RegisterForEventsAppendedNotifications(NotifySynchronousSubscribers);
+        _eventStore.RegisterForEventsAppendedNotifications(() => NotifySynchronousSubscribers(CancellationToken.None));
         RegisterSubscribers();
     }
 
@@ -28,23 +29,42 @@ public abstract class EventSubscriptionManager
         foreach (var subscriberType in _subscriberRegister.AllSubscribers)
         {
             var subscriber = (IEventSubscriber)scope.ServiceProvider.GetRequiredService(subscriberType);
-            _subscriberStateStore.UpsertSubscriber(subscriber);
+            _subscriberStateStore.UpsertSubscriber(subscriber).GetAwaiter().GetResult();
         }
     }
 
-    private Task NotifySynchronousSubscribers()
+    private Task NotifySynchronousSubscribers(CancellationToken cancellationToken)
     {
-        return NotifySubscribers(_subscriberRegister.SynchronousSubscribers);
+        return NotifySubscribers(_subscriberRegister.SynchronousSubscribers, cancellationToken);
     }
 
-    protected Task NotifyAsynchronousSubscribers()
+    protected async Task NotifyAsynchronousSubscribers(ILogger logger, CancellationToken cancellationToken)
     {
-        return NotifySubscribers(_subscriberRegister.AsynchronousSubscribers);
+        if (!_subscriberRegister.AsynchronousSubscribers.Any())
+        {
+            logger.LogInformation(GetType().Name + " no asynchronous subscribers registered");
+            return;
+        }
 
-        // TODO: continue updates if not done yet
+        logger.LogInformation(GetType().Name + " starting notification of asynchronous subscribers");
+
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                await NotifySubscribers(_subscriberRegister.AsynchronousSubscribers, cancellationToken);
+                await Task.Delay(1000);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Exception while notifying asynchronous subscribers");
+            }
+        }
+
+        logger.LogInformation(GetType().Name + " stopping notification of asynchronous subscribers");
     }
 
-    private async Task NotifySubscribers(IEnumerable<Type> subscriberTypes)
+    private async Task NotifySubscribers(IEnumerable<Type> subscriberTypes, CancellationToken cancellationToken)
     {
         using var scope = _serviceProvider.CreateScope();
 
@@ -53,16 +73,26 @@ public abstract class EventSubscriptionManager
 
         foreach (var subscriberType in subscriberTypes)
         {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                break;
+            }
+
             var subscriber = (IEventSubscriber)scope.ServiceProvider.GetRequiredService(subscriberType);
 
             var currentState = await _subscriberStateStore.GetProcessingState(subscriber);
+
+            if (!IsReadyForProcessing(currentState))
+            {
+                //continue;
+            }
 
             try
             {
                 var events = await LoadEvents(subscriber, currentState, headSequenceNumber, eventCache);
                 if (events.Any())
                 {
-                    await ApplyEvents(subscriber, currentState, events);
+                    await ApplyEvents(subscriber, currentState, events, cancellationToken);
 
                     var newState = new EventSubscriberProcessingState(DateTimeOffset.UtcNow, events.Last().SequenceNumber);
                     await _subscriberStateStore.SaveProcessingState(subscriber, newState);
@@ -75,6 +105,23 @@ public abstract class EventSubscriptionManager
                 await _subscriberStateStore.SaveProcessingState(subscriber, newState);
             }
         }
+    }
+
+    private bool IsReadyForProcessing(EventSubscriberProcessingState currentState)
+    {
+        if (currentState.ProcessingError == null)
+        {
+            return true;
+        }
+
+        // When processing fails we will exponentially backoff
+        var backoffSeconds = currentState.ProcessingError.ProcessingAttempts * currentState.ProcessingError.ProcessingAttempts;
+        if (currentState.ProcessingError.LatestRetryTime.AddSeconds(backoffSeconds) < DateTimeOffset.UtcNow)
+        {
+            return true;
+        }
+
+        return false;
     }
 
     private string PrepareErrorMessage(Exception exception)
@@ -109,20 +156,20 @@ public abstract class EventSubscriptionManager
         return [];
     }
 
-    private async Task ApplyEvents(IEventSubscriber subscriber, EventSubscriberProcessingState currentState, IEnumerable<EventEntry> events)
+    private async Task ApplyEvents(IEventSubscriber subscriber, EventSubscriberProcessingState currentState, IEnumerable<EventEntry> events, CancellationToken cancellationToken)
     {
         if (currentState.ProcessingError != null)
         {
             // Process one event at the time until we reach the failing one
             foreach (var @event in events)
             {
-                await subscriber.Update([@event]);
+                await subscriber.Update([@event], cancellationToken);
             }
         }
         else
         {
             // We expect every thing to be ok, so lets try to process the entire batch
-            await subscriber.Update(events);
+            await subscriber.Update(events, cancellationToken);
         }
     }
 

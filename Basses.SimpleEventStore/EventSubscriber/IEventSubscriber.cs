@@ -6,5 +6,5 @@ public interface IEventSubscriber
 {
     string Name { get; }
     Task<long> GetSequenceNumber(EventSubscriberProcessingState currentState);
-    Task Update(IEnumerable<EventEntry> events);
+    Task Update(IEnumerable<EventEntry> events, CancellationToken cancellationToken);
 }
