@@ -39,7 +39,7 @@ When looking into the code you will notice that in fact the "Item Added" has ver
 
 <img src="./Docs/images/cart_ietms.PNG" alt="Get cart items"/>
 
-Simple view pattern. The read model is based on most of the cart events. As the cart will only have a few events it is totally legal to build the read model on run time. This way we will have full consistency and don't have to handle eventually consistency.
+Simple view pattern. The read model is based on most of the cart events. As the cart will only have a few events it is totally legal to build the read model on runtime. This way we will have full consistency and don't have to handle eventually consistency. The read model is implemented using a runtime projector.
 
 ### Remove item
 
@@ -58,33 +58,33 @@ Simple command pattern.
 <img src="./Docs/images/inventory_changed.PNG" alt="Inventory changed"/>
 
 Translator pattern. The system will receive an external event from Kafka and turn it into a command, which will generate an event.
-As we only have the cart context implemented the external context is emulated using a http endpoint. The endpoint will publish the external event to Kafka. The translator will receive the event from Kafka and create the command.
+As we only have the cart context implemented I have emulated the external context using a http endpoint that will publish the external event to Kafka. The translator will receive the event from Kafka and create the command.
 
 ### Inventories
 
 <img src="./Docs/images/inventories.PNG" alt="Inventories"/>
 
-We can have many products and the inventory can change all the time, thus potentially we can have many events. So we use a persisted read model. I have implemented it using raw sql, but it could just as well be done using e.g.EntityFramework or a document store or something else.
-When we have persisted read models we can choose to build the model sync or async with the event beeing stored in the event store. We should generally avoid building the read models in sync as that will effect the performance of the command generating the event. But it comes with the cost of eventual consistency. In this case the event is originating from another context thus another flow. This means that eventual consistency is no problem at all.
+We can have many products and the inventory can change all the time, thus potentially we can have many events. So we use a persisted read model. I have implemented it using raw sql, but it could just as well be done using e.g. EntityFramework or a document store or something else.
+When we have persisted read models we can choose to build the model sync or async with the event beeing stored in the event store. We should generally avoid building the read models in sync as that will effect the performance of the command generating the event. But it comes with the cost of eventual consistency. In this case the event is originating from another context thus another flow. This means that eventual consistency is no problem at all. So the read model is implemented using an async projector.
 
 ### Price changed
 
 <img src="./Docs/images/price_changed.PNG" alt="Price changed"/>
 
-Same as with **Inventory changed**. An external context is emulated with a http endpoint. The endpoint will publish the external event to Kafka. The translator will receive the event from Kafka and create the command.
+Another translation pattern. Same as with **Inventory changed**. An external context is emulated with a http endpoint. The endpoint will publish the external event to Kafka. The translator will receive the event from Kafka and create the command.
 
 ### Carts with products
 
 <img src="./Docs/images/carts_with_products.PNG" alt="Carts with products"/>
 
 Another persisted read model. Again I have implemented it using raw sql but could be any other persistance method.
-Notice that I think there is a mistake in the book, as the ItemId is suddenly used as the ProductId!
+Notice that there is a mistake in the book and the original examples, as the ItemId is suddenly used as the ProductId! I have confirmed this issue with Martin and a fix is on his todo. My implementation uses both ItemId and ProductId, thus fixing the issue. Again eventual consistency is fine so a async projector is used.
 
 ### Archive item
 
 <img src="./Docs/images/archive_item.PNG" alt="Archive item"/>
 
-Automation pattern. The "Changed Prices" read model is in this case just on the model to make it understandable to the business. In fact the actual trigger is the event "Price Changed". The event will trigger the automation which will look in the "Carts with products" read model and for each cart with the given product execute a command.
+Automation pattern. The "Changed Prices" read model is in this case just on the model to make it understandable to the business. In fact the actual trigger is the event "Price Changed". The event will trigger the automation which will look in the "Carts with products" read model and for each cart with the given product execute a command. The actual automation is implemented using something I call a reactor which is similar to a projector but just reacts to an event.
 
 ### Submit cart
 
@@ -97,6 +97,7 @@ Simple command pattern.
 <img src="./Docs/images/publish_cart.PNG" alt="Publish cart"/>
 
 Another automation. It is triggered by the "Cart Submitted" event. It will execute a command to publish an external event to Kafka. Based on the result it will generate a new domain event with the result.
+Again the automation is implemented using af reactor. Notice that on exceptions the reactor will continue to retry, thus acting like a transactional outbox guaranteeing that the event will be published to Kafka eventually even if Kafka is down for a while.
 
 ## Extra
 
@@ -112,5 +113,5 @@ Another automation. It is triggered by the "Cart Submitted" event. It will execu
 
 ## Conclusion
 
-I think my event store can handle most relevant cases but there are still some that most be investigated futher and implemented to make it fully useful. So luckily there is still a lot to learn :-)
+I think my event store can handle most relevant cases but there are still some that must be investigated futher and implemented to make it fully useful. So luckily there is still a lot to learn :-)
 
