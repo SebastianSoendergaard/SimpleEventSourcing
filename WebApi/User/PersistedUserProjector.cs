@@ -8,10 +8,10 @@ public class PersistedUserProjector : Projector,
     IProjectionEventHandler<UserNameChanged>
 {
     private readonly Dictionary<Guid, PersistedUserProjection> _userProjections = [];
-    private readonly ISimpleObjectDb _db;
+    private readonly IDocumentStore _db;
     private long _sequenceNumber = 0;
 
-    public PersistedUserProjector(ISimpleObjectDb db)
+    public PersistedUserProjector(IDocumentStore db)
     {
         _db = db;
     }

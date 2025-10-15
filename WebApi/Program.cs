@@ -10,10 +10,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = "Server=localhost;Port=9002;User Id=postgres;Password=Passw0rd;Database=simple_event_sourcing;";
 
-SimpleObjectDbConfiguration config = new();
+DocumentStoreConfiguration config = new();
 config.RegisterDataType<PersistedUserProjectorState>(i => i.Name);
-SimplePostgreSqlObjectDb.CreateIfNotExist(connectionString, config);
-builder.Services.AddSingleton<ISimpleObjectDb>(x => new SimplePostgreSqlObjectDb(connectionString, config));
+builder.Services.AddSingleton<IDocumentStore>(x => new PostgreSqlDocumentStore(connectionString, config));
 
 //builder.Services.AddSingleton<IEventStore>(x => new InMemoryEventStore());
 //builder.Services.AddSingleton<IEventStore>(x => new FileEventStore(@"c:/temp/eventstore"));

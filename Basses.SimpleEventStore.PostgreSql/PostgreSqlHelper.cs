@@ -148,13 +148,7 @@ public class PostgreSqlHelper
 
 public record PostgreSqlParameter
 {
-    public PostgreSqlParameter(string name, object value)
-    {
-        Name = name;
-        Value = value;
-    }
-
-    public PostgreSqlParameter(string name, object value, NpgsqlDbType type)
+    public PostgreSqlParameter(string name, object value, NpgsqlDbType? type = null)
     {
         Name = name;
         Value = value;
