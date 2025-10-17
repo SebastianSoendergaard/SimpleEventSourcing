@@ -139,7 +139,7 @@ public abstract class PostgreSqlEventSubscriberStateStore : IEventSubscriberStat
                             CONSTRAINT {_stateStoreName}_unique_{_subscriberTypeName}_name UNIQUE ({_subscriberTypeName}_name)
                         );";
 
-        var sql3 = $@"CREATE INDEX IF NOT EXISTS {_stateStoreName}_index_{_subscriberTypeName}_name ON {_schema}.{_stateStoreName}({_subscriberTypeName}_name);";
+        var sql3 = $@"CREATE INDEX IF NOT EXISTS {_schema}_{_stateStoreName}_index_{_subscriberTypeName}_name ON {_schema}.{_stateStoreName}({_subscriberTypeName}_name);";
 
         try
         {
