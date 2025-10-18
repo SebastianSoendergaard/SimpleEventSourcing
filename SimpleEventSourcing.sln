@@ -21,6 +21,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UnderstandingEventSourcing"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cart", "UnderstandingEventsourcing\Cart\Cart.csproj", "{2191566F-F922-434D-A6F2-C1432F9F5A69}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cart.Cli.Client", "Cart.Cli.Client\Cart.Cli.Client.csproj", "{EC449A13-894F-4F1C-8493-2B9B9601EEDD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -59,6 +61,10 @@ Global
 		{2191566F-F922-434D-A6F2-C1432F9F5A69}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2191566F-F922-434D-A6F2-C1432F9F5A69}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2191566F-F922-434D-A6F2-C1432F9F5A69}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EC449A13-894F-4F1C-8493-2B9B9601EEDD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EC449A13-894F-4F1C-8493-2B9B9601EEDD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EC449A13-894F-4F1C-8493-2B9B9601EEDD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EC449A13-894F-4F1C-8493-2B9B9601EEDD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -67,6 +73,7 @@ Global
 		{54D08839-869E-461A-B9D4-FBEEDEB6B49A} = {C27EADE5-5BF4-4887-B3C2-7080C04E76C6}
 		{45B68CFC-9EE7-4C6F-B664-38CC18B47AE5} = {C27EADE5-5BF4-4887-B3C2-7080C04E76C6}
 		{2191566F-F922-434D-A6F2-C1432F9F5A69} = {C27EADE5-5BF4-4887-B3C2-7080C04E76C6}
+		{EC449A13-894F-4F1C-8493-2B9B9601EEDD} = {C27EADE5-5BF4-4887-B3C2-7080C04E76C6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1CB19755-D56F-4324-A096-03700104A168}
