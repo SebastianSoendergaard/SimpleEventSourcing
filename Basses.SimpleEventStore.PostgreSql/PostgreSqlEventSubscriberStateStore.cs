@@ -9,14 +9,15 @@ public abstract class PostgreSqlEventSubscriberStateStore : IEventSubscriberStat
     private readonly string _schema;
     private readonly string _stateStoreName;
     private readonly string _subscriberTypeName;
+    private readonly IInstrumentation _instrumentation;
 
-    public PostgreSqlEventSubscriberStateStore(string connectionString, string schema, string tableName, string subscriberTypeName)
+    public PostgreSqlEventSubscriberStateStore(string connectionString, string schema, string tableName, string subscriberTypeName, IInstrumentation? instrumentation = null)
     {
         _sqlHelper = new PostgreSqlHelper(connectionString);
         _schema = schema;
         _stateStoreName = tableName;
         _subscriberTypeName = subscriberTypeName;
-
+        _instrumentation = instrumentation ?? new NullInstrumentation();
         _sqlHelper.EnsureDatabase();
 
         CreateStateStoreTableIfNotExists();

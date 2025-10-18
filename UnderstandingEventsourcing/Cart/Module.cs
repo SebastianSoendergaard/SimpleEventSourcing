@@ -5,7 +5,9 @@ using Basses.SimpleEventStore.Projections;
 using Basses.SimpleEventStore.Reactions;
 using Basses.SimpleMessageBus;
 using Basses.SimpleMessageBus.Kafka;
+using Cart;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
@@ -44,19 +46,22 @@ public static class Module
         var kafkaServer = configuration.GetValue<string>("Cart:Kafka:Server") ?? "";
         var kafkaClientId = configuration.GetValue<string>("Cart:Kafka:ClientId") ?? "";
 
+        var instrumentation = new EventStoreInstrumentation();
+        services.AddSingleton<IInstrumentation>(instrumentation);
+
         services.AddEventStore(
-            _ => new PostgreSqlEventStore(connectionString, schema, eventStoreName),
+            _ => new PostgreSqlEventStore(connectionString, schema, eventStoreName, instrumentation: instrumentation),
             r => r
             .RegisterUpcaster(new ItemAddedEventUpcaster())
         );
         services.AddProjections(
-            _ => new PostgreSqlProjectorStateStore(connectionString, schema, projectorStateStoreName),
+            _ => new PostgreSqlProjectorStateStore(connectionString, schema, projectorStateStoreName, instrumentation: instrumentation),
             r => r
             .RegisterAsynchronousProjector<GetInventoryProjector>()
             .RegisterAsynchronousProjector<GetCartsWithProductsProjector>()
         );
         services.AddReactions(
-            _ => new PostgreSqlReactorStateStore(connectionString, schema, reactorStateStoreName),
+            _ => new PostgreSqlReactorStateStore(connectionString, schema, reactorStateStoreName, instrumentation: instrumentation),
             r => r
             .RegisterAsynchronousReactor<ArchiveItemAutomationReactor>()
             .RegisterAsynchronousReactor<PublishCartAutomationReactor>()
@@ -167,7 +172,17 @@ public static class Module
             }
 
             return reactorStates;
-        });
+        }).WithTags("Support");
+        app.MapGet("/api/support/get-instumentation-actions/v1", ([FromServices] IInstrumentation instrumentation) =>
+        {
+            var eventStoreInstrumentation = instrumentation as EventStoreInstrumentation;
+            if (eventStoreInstrumentation == null)
+            {
+                return Results.BadRequest("Instrumentation is not of type EventStoreInstrumentation");
+            }
+
+            return Results.Ok(eventStoreInstrumentation.GetAllActions());
+        }).WithTags("Support");
     }
 }
 

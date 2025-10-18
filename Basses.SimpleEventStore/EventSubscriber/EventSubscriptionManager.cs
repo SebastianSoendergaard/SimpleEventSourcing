@@ -10,13 +10,15 @@ public abstract class EventSubscriptionManager
     private readonly IEventStore _eventStore;
     private readonly IEventSubscriberStateStore _subscriberStateStore;
     private readonly SubscriberRegister _subscriberRegister;
+    private readonly IInstrumentation _instrumentation;
     private readonly IServiceProvider _serviceProvider;
 
-    public EventSubscriptionManager(IEventStore eventStore, IEventSubscriberStateStore subscriberStateStore, SubscriberRegister subscriberRegister, IServiceProvider serviceProvider)
+    public EventSubscriptionManager(IEventStore eventStore, IEventSubscriberStateStore subscriberStateStore, SubscriberRegister subscriberRegister, IInstrumentation instrumentation, IServiceProvider serviceProvider)
     {
         _eventStore = eventStore;
         _subscriberStateStore = subscriberStateStore;
         _subscriberRegister = subscriberRegister;
+        _instrumentation = instrumentation;
         _serviceProvider = serviceProvider;
 
         _eventStore.RegisterForEventsAppendedNotifications(() => NotifySynchronousSubscribers(CancellationToken.None));

@@ -10,15 +10,17 @@ public class PostgreSqlEventStore : IEventStore
     private readonly string _schema;
     private readonly string _eventStoreName;
     private readonly IEventSerializer _serializer;
+    private readonly IInstrumentation _instrumentation;
     private readonly UpcastManager _upcastManager;
     private Func<Task>? _onEventsAppended;
 
-    public PostgreSqlEventStore(string connectionString, string schema, string tableName, IEventSerializer? eventSerializer = null)
+    public PostgreSqlEventStore(string connectionString, string schema, string tableName, IEventSerializer? eventSerializer = null, IInstrumentation? instrumentation = null)
     {
         _sqlHelper = new PostgreSqlHelper(connectionString);
         _schema = schema;
         _eventStoreName = tableName;
         _serializer = eventSerializer ?? new DefaultEventSerializer();
+        _instrumentation = instrumentation ?? new NullInstrumentation();
         _upcastManager = new UpcastManager(_serializer);
 
         _sqlHelper.EnsureDatabase();
@@ -28,6 +30,9 @@ public class PostgreSqlEventStore : IEventStore
 
     public async Task AppendEvents(string streamId, int version, IEnumerable<object> events)
     {
+        var instrumentationId = Guid.NewGuid();
+        _instrumentation.StartingAction("AppendEvents", instrumentationId, new { streamId, version, eventCount = events.Count() });
+
         var sql = $@"INSERT INTO {_schema}.{_eventStoreName} (stream_id, version, timestamp, event_type, event) " +
                         "VALUES(@streamId, @version, @timestamp, @eventType, @eventJson)";
 
@@ -59,6 +64,10 @@ public class PostgreSqlEventStore : IEventStore
         catch (Exception ex)
         {
             throw new EventStoreException("Could not append events", ex);
+        }
+        finally
+        {
+            _instrumentation.FinishedAction("AppendEvents", instrumentationId, new { streamId, version, eventCount = events.Count() });
         }
 
         if (_onEventsAppended != null)

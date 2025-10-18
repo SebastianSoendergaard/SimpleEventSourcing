@@ -6,8 +6,8 @@ namespace Basses.SimpleEventStore.Projections;
 
 public class ProjectionManager : EventSubscriptionManager
 {
-    public ProjectionManager(IEventStore eventStore, IProjectorStateStore projectorStateStore, ProjectionsRegister projectionsRegister, IServiceProvider serviceProvider)
-        : base(eventStore, projectorStateStore, projectionsRegister, serviceProvider)
+    public ProjectionManager(IEventStore eventStore, IProjectorStateStore projectorStateStore, ProjectionsRegister projectionsRegister, IInstrumentation instrumentation, IServiceProvider serviceProvider)
+        : base(eventStore, projectorStateStore, projectionsRegister, instrumentation, serviceProvider)
     {
     }
 
