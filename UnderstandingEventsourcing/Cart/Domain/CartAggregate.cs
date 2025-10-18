@@ -90,12 +90,12 @@ public class CartAggregate : Aggregate,
     {
         if (!_isSubmitted)
         {
-            throw new CartException($"Can publish unsubmitted cart");
+            throw new CartException($"Can not publish unsubmitted cart");
         }
 
         if (_isPublished)
         {
-            throw new CartException($"Can not submit cart twice");
+            return;
         }
 
         Apply(new CartPublishedEvent(new Guid(Id)));

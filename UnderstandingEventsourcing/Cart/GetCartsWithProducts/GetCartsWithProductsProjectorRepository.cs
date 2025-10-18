@@ -136,6 +136,21 @@ public sealed class GetCartsWithProductsProjectorRepository
         }
     }
 
+    public async Task SetLastProcessedSequenceNumber(long sequenceNumber)
+    {
+        try
+        {
+            await _sqlHelper.Transaction(async (conn, tx) =>
+            {
+                await StoreProjectorState(sequenceNumber, conn, tx);
+            });
+        }
+        catch (Exception ex)
+        {
+            throw new EventStoreException("Could not set sequence number", ex);
+        }
+    }
+
     private async Task StoreProjectorState(long sequenceNumber, NpgsqlConnection connection, NpgsqlTransaction transaction)
     {
         var sql = $@"INSERT INTO {_schema}.read_model_projector_state (projector_name, last_processed_sequence_number)

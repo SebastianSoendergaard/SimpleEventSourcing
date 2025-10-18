@@ -48,5 +48,9 @@ public class GetCartsWithProductsProjector : Projector,
         return _repository.AddProductToCart(@event.CartId, @event.ItemId, @event.ProductId, eventData.SequenceNumber);
     }
 
+    protected override Task UpdateComplete(long sequenceNumber)
+    {
+        return _repository.SetLastProcessedSequenceNumber(sequenceNumber);
+    }
 }
 

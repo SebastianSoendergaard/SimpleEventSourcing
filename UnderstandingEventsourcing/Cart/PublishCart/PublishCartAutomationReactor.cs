@@ -3,7 +3,7 @@ using UnderstandingEventsourcingExample.Cart.Domain;
 
 namespace UnderstandingEventsourcingExample.Cart.PublishCart;
 
-internal class PublishCartAutomationReactor(PublishCartCommandHandler handler) : Reactor,
+public class PublishCartAutomationReactor(PublishCartCommandHandler handler) : Reactor,
     IReactionEventHandler<CartSubmittedEvent>
 {
     public Task ReactOn(CartSubmittedEvent @event, EventData eventData)
