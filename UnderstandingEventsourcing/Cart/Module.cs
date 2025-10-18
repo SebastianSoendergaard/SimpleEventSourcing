@@ -102,24 +102,24 @@ public static class Module
 
     public static void RegisterCartModuleEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapPost("/api/cart/items/add/v1", async ([FromServices] AddItemCommandHandler handler, [FromBody] AddItemCommand cmd) => await handler.Handle(cmd));
-        app.MapPost("/api/cart/items/remove/v1", async ([FromServices] RemoveItemCommandHandler handler, [FromBody] RemoveItemCommand cmd) => await handler.Handle(cmd));
-        app.MapPost("/api/cart/items/archive/v1", async ([FromServices] ArchiveItemCommandHandler handler, [FromBody] ArchiveItemCommand cmd) => await handler.Handle(cmd));
-        app.MapPost("/api/cart/clear/v1", async ([FromServices] ClearCartCommandHandler handler, [FromBody] ClearCartCommand cmd) => await handler.Handle(cmd));
-        app.MapGet("/api/cart/items/v1", async ([FromServices] GetCartItemsQueryHandler handler, [FromQuery] Guid cartId) => await handler.Handle(new GetCartItemsQuery(cartId)));
-        app.MapPost("/api/cart/submit/v1", async ([FromServices] SubmitCartCommandHandler handler, [FromBody] SubmitCartCommand cmd) => await handler.Handle(cmd));
-        app.MapGet("/api/cart/get-inventory/v1", async ([FromServices] GetInventoryQueryHandler handler, [FromQuery] Guid productId) => await handler.Handle(new GetInventoryQuery(productId)));
-        app.MapGet("/api/cart/get-cartswithproducts/v1", async ([FromServices] GetCartsWithProductsQueryHandler handler, [FromQuery] Guid productId) => await handler.Handle(new GetCartsWithProductsQuery(productId)));
+        app.MapPost("/api/cart/items/add/v1", async ([FromServices] AddItemCommandHandler handler, [FromBody] AddItemCommand cmd) => await handler.Handle(cmd)).WithTags("Cart");
+        app.MapPost("/api/cart/items/remove/v1", async ([FromServices] RemoveItemCommandHandler handler, [FromBody] RemoveItemCommand cmd) => await handler.Handle(cmd)).WithTags("Cart");
+        app.MapPost("/api/cart/items/archive/v1", async ([FromServices] ArchiveItemCommandHandler handler, [FromBody] ArchiveItemCommand cmd) => await handler.Handle(cmd)).WithTags("Cart");
+        app.MapPost("/api/cart/clear/v1", async ([FromServices] ClearCartCommandHandler handler, [FromBody] ClearCartCommand cmd) => await handler.Handle(cmd)).WithTags("Cart");
+        app.MapGet("/api/cart/items/v1", async ([FromServices] GetCartItemsQueryHandler handler, [FromQuery] Guid cartId) => await handler.Handle(new GetCartItemsQuery(cartId))).WithTags("Cart");
+        app.MapPost("/api/cart/submit/v1", async ([FromServices] SubmitCartCommandHandler handler, [FromBody] SubmitCartCommand cmd) => await handler.Handle(cmd)).WithTags("Cart");
+        app.MapGet("/api/cart/get-inventory/v1", async ([FromServices] GetInventoryQueryHandler handler, [FromQuery] Guid productId) => await handler.Handle(new GetInventoryQuery(productId))).WithTags("Cart");
+        app.MapGet("/api/cart/get-cartswithproducts/v1", async ([FromServices] GetCartsWithProductsQueryHandler handler, [FromQuery] Guid productId) => await handler.Handle(new GetCartsWithProductsQuery(productId))).WithTags("Cart");
 
-        app.MapPost("/api/external/change-inventory/v1", async ([FromServices] IMessageProducer messageProducer, [FromBody] ExternalInventoryChangedEvent e) => await messageProducer.SendMessage("understand-eventsourcing-topic", "inventory-changed", e));
-        app.MapPost("/api/external/change-price/v1", async ([FromServices] IMessageProducer messageProducer, [FromBody] ExternalPriceChangedEvent e) => await messageProducer.SendMessage("understand-eventsourcing-topic", "price-changed", e));
+        app.MapPost("/api/external/change-inventory/v1", async ([FromServices] IMessageProducer messageProducer, [FromBody] ExternalInventoryChangedEvent e) => await messageProducer.SendMessage("understand-eventsourcing-topic", "inventory-changed", e)).WithTags("Simulate external service");
+        app.MapPost("/api/external/change-price/v1", async ([FromServices] IMessageProducer messageProducer, [FromBody] ExternalPriceChangedEvent e) => await messageProducer.SendMessage("understand-eventsourcing-topic", "price-changed", e)).WithTags("Simulate external service");
 
-        app.MapGet("/api/support/get-aggregate-events/v1", async ([FromServices] IEventStore eventStore, [FromQuery] string aggregateId) => await eventStore.LoadEvents(aggregateId));
+        app.MapGet("/api/support/get-aggregate-events/v1", async ([FromServices] IEventStore eventStore, [FromQuery] string aggregateId) => await eventStore.LoadEvents(aggregateId)).WithTags("Support");
         app.MapGet("/api/support/get-latest-events/v1", async ([FromServices] IEventStore eventStore, [FromQuery] int eventMaxCount) =>
         {
             var head = (await eventStore.GetHeadSequenceNumber()) + 1; // fix offset
             return await eventStore.LoadEvents(head - eventMaxCount, eventMaxCount);
-        });
+        }).WithTags("Support");
         app.MapGet("/api/support/get-projector-states/v1", async ([FromServices] IEventStore eventStore, [FromServices] ProjectionManager projectionManager, [FromServices] IServiceProvider serviceProvider) =>
         {
             var projectorTypes = projectionManager.GetProjectorTypes();
@@ -143,7 +143,7 @@ public static class Module
             }
 
             return projectorStates;
-        });
+        }).WithTags("Support");
         app.MapGet("/api/support/get-reactor-states/v1", async ([FromServices] IEventStore eventStore, [FromServices] ReactionManager reactionManager, [FromServices] IServiceProvider serviceProvider) =>
         {
             var reactorTypes = reactionManager.GetReactorTypes();
