@@ -31,7 +31,7 @@ public class PostgreSqlEventStore : IEventStore
     public async Task AppendEvents(string streamId, int version, IEnumerable<object> events)
     {
         var instrumentationId = Guid.NewGuid();
-        _instrumentation.StartingAction("AppendEvents", instrumentationId, new { streamId, version, eventCount = events.Count() });
+        _instrumentation.StartingAction("append-events", instrumentationId, new { streamId, version, eventCount = events.Count() });
 
         var sql = $@"INSERT INTO {_schema}.{_eventStoreName} (stream_id, version, timestamp, event_type, event) " +
                         "VALUES(@streamId, @version, @timestamp, @eventType, @eventJson)";
@@ -67,7 +67,7 @@ public class PostgreSqlEventStore : IEventStore
         }
         finally
         {
-            _instrumentation.FinishedAction("AppendEvents", instrumentationId, new { streamId, version, eventCount = events.Count() });
+            _instrumentation.CompletedAction("AppendEvents", instrumentationId, new { streamId, version, eventCount = events.Count() });
         }
 
         if (_onEventsAppended != null)
@@ -144,6 +144,10 @@ public class PostgreSqlEventStore : IEventStore
 
     private async Task<IEnumerable<EventEntry>> LoadEventsFromDatabase(string sql, IEnumerable<PostgreSqlParameter> parameters)
     {
+        var instrumentationId = Guid.NewGuid();
+        var eventCount = 0;
+        _instrumentation.StartingAction("load-events", instrumentationId, new { parameters });
+
         try
         {
             var events = await _sqlHelper.QueryAsync(sql, parameters, reader =>
@@ -165,14 +169,18 @@ public class PostgreSqlEventStore : IEventStore
                 return eventEntry;
             });
 
+            eventCount = events.Count();
             return events;
         }
         catch (Exception ex)
         {
             throw new EventStoreException("Could not load events", ex);
         }
+        finally
+        {
+            _instrumentation.CompletedAction("LoadEvents", instrumentationId, new { parameters, eventCount });
+        }
     }
-
     private void CreateEventStoreTableIfNotExists()
     {
         var sql1 = $"CREATE SCHEMA IF NOT EXISTS {_schema}";

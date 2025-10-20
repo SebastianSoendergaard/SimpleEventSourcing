@@ -3,6 +3,7 @@
 Console.WriteLine("Enter program to execute, valid options:");
 Console.WriteLine("  1: client");
 Console.WriteLine("  2: monitor");
+Console.WriteLine("  3: instrumentation");
 var input = Console.ReadKey();
 Console.WriteLine("");
 Console.WriteLine("");
@@ -15,6 +16,10 @@ switch (input.KeyChar)
 
     case '2':
         CartMonitor.Run().GetAwaiter().GetResult();
+        break;
+
+    case '3':
+        InstrumentationMonitor.Run().GetAwaiter().GetResult();
         break;
 
     default:

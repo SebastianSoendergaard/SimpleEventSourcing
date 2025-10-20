@@ -68,6 +68,9 @@ public abstract class EventSubscriptionManager
 
     private async Task NotifySubscribers(IEnumerable<Type> subscriberTypes, CancellationToken cancellationToken)
     {
+        var instrumentationId = Guid.NewGuid();
+        _instrumentation.StartingAction("notify-subscribers", instrumentationId, new { subscriberCount = subscriberTypes.Count() });
+
         using var scope = _serviceProvider.CreateScope();
 
         var headSequenceNumber = await _eventStore.GetHeadSequenceNumber();
@@ -107,6 +110,8 @@ public abstract class EventSubscriptionManager
                 await _subscriberStateStore.SaveProcessingState(subscriber, newState);
             }
         }
+
+        _instrumentation.CompletedAction("notify-subscribers", instrumentationId, new { subscriberCount = subscriberTypes.Count() });
     }
 
     private bool IsReadyForProcessing(EventSubscriberProcessingState currentState)
@@ -140,6 +145,10 @@ public abstract class EventSubscriptionManager
 
     private async Task<IEnumerable<EventEntry>> LoadEvents(IEventSubscriber subscriber, EventSubscriberProcessingState currentState, long headSequenceNumber, Dictionary<long, IEnumerable<EventEntry>> eventCache)
     {
+        var instrumentationId = Guid.NewGuid();
+        var eventCount = 0;
+        _instrumentation.StartingAction("notify-subscribers-load-events", instrumentationId, new { subscriber = nameof(subscriber) });
+
         var sequenceNumber = await subscriber.GetSequenceNumber(currentState);
 
         if (eventCache.ContainsKey(sequenceNumber))
@@ -152,14 +161,21 @@ public abstract class EventSubscriptionManager
             const int max = 50; // We need a limit to ensure that one projector does not block them all
             var events = await _eventStore.LoadEvents(sequenceNumber + 1, max);
             eventCache.Add(sequenceNumber, events);
+            eventCount = events.Count();
             return events;
         }
+
+        _instrumentation.CompletedAction("notify-subscribers-load-events", instrumentationId, new { subscriber = nameof(subscriber), eventCount });
 
         return [];
     }
 
     private async Task ApplyEvents(IEventSubscriber subscriber, EventSubscriberProcessingState currentState, IEnumerable<EventEntry> events, CancellationToken cancellationToken)
     {
+        var instrumentationId = Guid.NewGuid();
+        var eventCount = events.Count();
+        _instrumentation.StartingAction("notify-subscribers-apply-events", instrumentationId, new { subscriber = nameof(subscriber), currentState });
+
         if (currentState.ProcessingError != null)
         {
             // Process one event at the time until we reach the failing one
@@ -170,9 +186,11 @@ public abstract class EventSubscriptionManager
         }
         else
         {
-            // We expect every thing to be ok, so lets try to process the entire batch
+            // We expect everything to be ok, so lets try to process the entire batch
             await subscriber.Update(events, cancellationToken);
         }
+
+        _instrumentation.CompletedAction("notify-subscribers-apply-events", instrumentationId, new { subscriber = nameof(subscriber), currentState, eventCount });
     }
 
     protected IEnumerable<Type> GetSubscriberTypes()

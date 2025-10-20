@@ -46,7 +46,7 @@ public static class Module
         var kafkaServer = configuration.GetValue<string>("Cart:Kafka:Server") ?? "";
         var kafkaClientId = configuration.GetValue<string>("Cart:Kafka:ClientId") ?? "";
 
-        var instrumentation = new EventStoreInstrumentation();
+        var instrumentation = new EventStoreActionsCollector();
         services.AddSingleton<IInstrumentation>(instrumentation);
 
         services.AddEventStore(
@@ -175,13 +175,13 @@ public static class Module
         }).WithTags("Support");
         app.MapGet("/api/support/get-instumentation-actions/v1", ([FromServices] IInstrumentation instrumentation) =>
         {
-            var eventStoreInstrumentation = instrumentation as EventStoreInstrumentation;
+            var eventStoreInstrumentation = instrumentation as EventStoreActionsCollector;
             if (eventStoreInstrumentation == null)
             {
                 return Results.BadRequest("Instrumentation is not of type EventStoreInstrumentation");
             }
 
-            return Results.Ok(eventStoreInstrumentation.GetAllActions());
+            return Results.Ok(eventStoreInstrumentation.CollectActions());
         }).WithTags("Support");
     }
 }
