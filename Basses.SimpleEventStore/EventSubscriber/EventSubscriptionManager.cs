@@ -84,7 +84,7 @@ public abstract class EventSubscriptionManager
 
             if (!IsReadyForProcessing(currentState))
             {
-                //continue;
+                continue;
             }
 
             try
