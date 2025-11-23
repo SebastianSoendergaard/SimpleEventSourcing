@@ -97,27 +97,11 @@ public class PostgreSqlHelper
 
     public void EnsureDatabase()
     {
-        var connectionProperties = _connectionString
-            .Split(';')
-            .Select(x => x.Trim())
-            .Where(x => !string.IsNullOrWhiteSpace(x))
-            .Select(x =>
-            {
-                var values = x.Split('=');
-                return new { Key = values[0], Value = values[1] };
-            });
+        var builder = new NpgsqlConnectionStringBuilder(_connectionString);
+        var databaseName = builder.Database ?? "";
+        builder.Database = null;
 
-        var connectionPropertiesWithoutDatabase = connectionProperties
-            .Where(x => !x.Key.StartsWith("database", StringComparison.OrdinalIgnoreCase));
-
-        var connectionStringWithoutDatabase = string.Join(';', connectionPropertiesWithoutDatabase.Select(x => $"{x.Key}={x.Value}"));
-
-        var databaseName = connectionProperties
-            .Where(x => x.Key.StartsWith("database", StringComparison.OrdinalIgnoreCase))
-            .Select(x => x.Value)
-            .Single();
-
-        CreateDatabaseIfNotExists(connectionStringWithoutDatabase, databaseName);
+        CreateDatabaseIfNotExists(builder.ConnectionString, databaseName);
     }
 
     private static void CreateDatabaseIfNotExists(string connectionString, string databaseName)
@@ -125,24 +109,47 @@ public class PostgreSqlHelper
         try
         {
             using var connection = new NpgsqlConnection(connectionString);
-            connection.Open();
-            var sql1 = $"SELECT COUNT(*) FROM pg_database WHERE datname = '{databaseName}'";
-            using var cmd1 = new NpgsqlCommand(sql1);
-            cmd1.Connection = connection;
-            var tableCount = (long)(cmd1.ExecuteScalar() ?? 0);
-            if (tableCount == 0)
+            if (connection.State != System.Data.ConnectionState.Open)
             {
-                var sql2 = $"CREATE DATABASE {databaseName}";
-                using var cmd2 = new NpgsqlCommand(sql2);
-                cmd2.Connection = connection;
-                cmd2.ExecuteNonQuery();
+                connection.Open();
             }
+
+            if (!DoesDatabaseExist(connection, databaseName))
+            {
+                CreateDatabase(connection, databaseName);
+            }
+
             connection.Close();
         }
         catch (Exception ex)
         {
             throw new EventStoreException("Could not create database", ex);
         }
+    }
+
+    private static bool DoesDatabaseExist(NpgsqlConnection connection, string databaseName)
+    {
+        if (databaseName.Contains('"'))
+        {
+            throw new ArgumentException("Invalid database name");
+        }
+
+        var sql = $"SELECT COUNT(*) FROM pg_database WHERE datname = '{databaseName}'";
+        using var cmd = new NpgsqlCommand(sql, connection);
+        var tableCount = (long)(cmd.ExecuteScalar() ?? 0);
+        return tableCount > 0;
+    }
+
+    private static void CreateDatabase(NpgsqlConnection connection, string databaseName)
+    {
+        if (databaseName.Contains('"'))
+        {
+            throw new ArgumentException("Invalid database name");
+        }
+
+        var sql = $"CREATE DATABASE \"{databaseName}\"";
+        using var cmd = new NpgsqlCommand(sql, connection);
+        cmd.ExecuteNonQuery();
     }
 }
 
