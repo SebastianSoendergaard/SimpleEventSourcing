@@ -39,7 +39,7 @@ public sealed class ProjectionManagerTests
         serviceCollection.AddSingleton<ProjectorStore>();
 
         var serviceProvider = serviceCollection.BuildServiceProvider();
-        var projectionManager = new ProjectionManager(eventStore, stateStore, register, serviceProvider);
+        var projectionManager = new ProjectionManager(eventStore, stateStore, register, new NullInstrumentation(), serviceProvider);
 
         var streamId = Guid.NewGuid().ToString();
         var @event = new CreatedEvent(1, "abc");
