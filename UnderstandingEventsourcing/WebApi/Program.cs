@@ -1,5 +1,6 @@
 ﻿using Microsoft.OpenApi.Models;
 using UnderstandingEventsourcingExample.Cart;
+using UnderstandingEventsourcingExample.Loyalty;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
@@ -9,10 +10,12 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 builder.Services.AddCartModule(builder.Configuration);
+builder.Services.AddLoyaltyModule(builder.Configuration);
 
 var app = builder.Build();
 
 app.UseCartModule();
+app.UseLoyaltyModule();
 
 if (app.Environment.IsDevelopment())
 {
@@ -21,6 +24,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.RegisterCartModuleEndpoints();
+app.RegisterLoyaltyModuleEndpoints();
 
 app.Run();
 

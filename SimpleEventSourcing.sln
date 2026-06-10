@@ -23,6 +23,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cart", "UnderstandingEvents
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cart.Cli.Client", "Cart.Cli.Client\Cart.Cli.Client.csproj", "{EC449A13-894F-4F1C-8493-2B9B9601EEDD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Loyalty", "Loyalty\Loyalty.csproj", "{57A8D4B5-067C-4485-B16A-44683ADCD987}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -65,6 +67,10 @@ Global
 		{EC449A13-894F-4F1C-8493-2B9B9601EEDD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EC449A13-894F-4F1C-8493-2B9B9601EEDD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EC449A13-894F-4F1C-8493-2B9B9601EEDD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{57A8D4B5-067C-4485-B16A-44683ADCD987}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{57A8D4B5-067C-4485-B16A-44683ADCD987}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{57A8D4B5-067C-4485-B16A-44683ADCD987}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{57A8D4B5-067C-4485-B16A-44683ADCD987}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -74,6 +80,7 @@ Global
 		{45B68CFC-9EE7-4C6F-B664-38CC18B47AE5} = {C27EADE5-5BF4-4887-B3C2-7080C04E76C6}
 		{2191566F-F922-434D-A6F2-C1432F9F5A69} = {C27EADE5-5BF4-4887-B3C2-7080C04E76C6}
 		{EC449A13-894F-4F1C-8493-2B9B9601EEDD} = {C27EADE5-5BF4-4887-B3C2-7080C04E76C6}
+		{57A8D4B5-067C-4485-B16A-44683ADCD987} = {C27EADE5-5BF4-4887-B3C2-7080C04E76C6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1CB19755-D56F-4324-A096-03700104A168}
