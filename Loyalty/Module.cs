@@ -1,10 +1,6 @@
-﻿using Basses.SimpleEventStore;
-using Basses.SimpleEventStore.EventStore;
-using Basses.SimpleEventStore.PostgreSql;
+﻿using Basses.SimpleEventStore.EventStore;
 using Basses.SimpleEventStore.Projections;
 using Basses.SimpleEventStore.Reactions;
-using Basses.SimpleMessageBus;
-using Basses.SimpleMessageBus.Kafka;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
@@ -22,74 +18,74 @@ public static class Module
         services.Configure<LoyaltyOptions>(configuration.GetSection("Loyalty:EventStore"));
         services.Configure<KafkaOptions>(configuration.GetSection("Loyalty:Kafka"));
 
-        var connectionString = configuration.GetValue<string>("Cart:EventStore:ConnectionString") ?? "";
-        var schema = configuration.GetValue<string>("Cart:EventStore:Schema") ?? "";
-        var eventStoreName = configuration.GetValue<string>("Cart:EventStore:EventStoreName") ?? "";
-        var projectorStateStoreName = configuration.GetValue<string>("Cart:EventStore:ProjectorStateStoreName") ?? "";
-        var reactorStateStoreName = configuration.GetValue<string>("Cart:EventStore:ReactorStateStoreName") ?? "";
+        var connectionString = configuration.GetValue<string>("Loyalty:EventStore:ConnectionString") ?? "";
+        var schema = configuration.GetValue<string>("Loyalty:EventStore:Schema") ?? "";
+        var eventStoreName = configuration.GetValue<string>("Loyalty:EventStore:EventStoreName") ?? "";
+        var projectorStateStoreName = configuration.GetValue<string>("Loyalty:EventStore:ProjectorStateStoreName") ?? "";
+        var reactorStateStoreName = configuration.GetValue<string>("CaLoyaltyrt:EventStore:ReactorStateStoreName") ?? "";
 
-        var kafkaServer = configuration.GetValue<string>("Cart:Kafka:Server") ?? "";
-        var kafkaClientId = configuration.GetValue<string>("Cart:Kafka:ClientId") ?? "";
+        var kafkaServer = configuration.GetValue<string>("Loyalty:Kafka:Server") ?? "";
+        var kafkaClientId = configuration.GetValue<string>("Loyalty:Kafka:ClientId") ?? "";
 
-        services.AddEventStore(
-            _ => new PostgreSqlEventStore(connectionString, schema, eventStoreName),
-            r => r
-            .RegisterUpcaster(new ItemAddedEventUpcaster())
-        );
-        services.AddProjections(
-            _ => new PostgreSqlProjectorStateStore(connectionString, schema, projectorStateStoreName),
-            r => r
-            .RegisterAsynchronousProjector<GetInventoryProjector>()
-            .RegisterAsynchronousProjector<GetCartsWithProductsProjector>()
-        );
-        services.AddReactions(
-            _ => new PostgreSqlReactorStateStore(connectionString, schema, reactorStateStoreName),
-            r => r
-            .RegisterAsynchronousReactor<ArchiveItemAutomationReactor>()
-            .RegisterAsynchronousReactor<PublishCartAutomationReactor>()
-        );
+        //services.AddEventStore(
+        //    _ => new PostgreSqlEventStore(connectionString, schema, eventStoreName),
+        //    r => r
+        //    .RegisterUpcaster(new ItemAddedEventUpcaster())
+        //);
+        //services.AddProjections(
+        //    _ => new PostgreSqlProjectorStateStore(connectionString, schema, projectorStateStoreName),
+        //    r => r
+        //    .RegisterAsynchronousProjector<GetInventoryProjector>()
+        //    .RegisterAsynchronousProjector<GetCartsWithProductsProjector>()
+        //);
+        //services.AddReactions(
+        //    _ => new PostgreSqlReactorStateStore(connectionString, schema, reactorStateStoreName),
+        //    r => r
+        //    .RegisterAsynchronousReactor<ArchiveItemAutomationReactor>()
+        //    .RegisterAsynchronousReactor<PublishCartAutomationReactor>()
+        //);
 
-        services.AddKafkaMessageBus();
+        //services.AddKafkaMessageBus();
 
-        services.AddScoped<AddItemCommandHandler>();
-        services.AddScoped<RemoveItemCommandHandler>();
-        services.AddScoped<ArchiveItemCommandHandler>();
-        services.AddScoped<ClearCartCommandHandler>();
-        services.AddScoped<GetCartItemsQueryHandler>();
-        services.AddScoped<ChangeInventoryCommandHandler>();
-        services.AddScoped<GetInventoryQueryHandler>();
-        services.AddScoped<ChangePriceCommandHandler>();
-        services.AddScoped<GetCartsWithProductsQueryHandler>();
-        services.AddScoped<SubmitCartCommandHandler>();
-        services.AddScoped<PublishCartCommandHandler>();
+        //services.AddScoped<AddItemCommandHandler>();
+        //services.AddScoped<RemoveItemCommandHandler>();
+        //services.AddScoped<ArchiveItemCommandHandler>();
+        //services.AddScoped<ClearCartCommandHandler>();
+        //services.AddScoped<GetCartItemsQueryHandler>();
+        //services.AddScoped<ChangeInventoryCommandHandler>();
+        //services.AddScoped<GetInventoryQueryHandler>();
+        //services.AddScoped<ChangePriceCommandHandler>();
+        //services.AddScoped<GetCartsWithProductsQueryHandler>();
+        //services.AddScoped<SubmitCartCommandHandler>();
+        //services.AddScoped<PublishCartCommandHandler>();
 
-        ReadModelMigrator.Migrate(connectionString);
+        //ReadModelMigrator.Migrate(connectionString);
 
-        services.AddScoped<CartRepository>();
-        services.AddScoped<InventoryRepository>();
-        services.AddScoped<PricingRepository>();
+        //services.AddScoped<CartRepository>();
+        //services.AddScoped<InventoryRepository>();
+        //services.AddScoped<PricingRepository>();
 
-        services.AddScoped<IDeviceFingerPrintCalculator, DeviceFingerPrintCalculator>();
+        //services.AddScoped<IDeviceFingerPrintCalculator, DeviceFingerPrintCalculator>();
 
         return services;
     }
 
     public static void UseLoyaltyModule(this IHost host)
     {
-        var messageConsumer = host.Services.GetRequiredService<IMessageConsumer>();
-        messageConsumer.Subscribe<ExternalInventoryChangedEvent>("understand-eventsourcing-topic", "inventory-changed", async e =>
-        {
-            await host.ExecuteScoped<ChangeInventoryCommandHandler>(h => h.Handle(new ChangeInventoryCommand(e.ProductId, e.Inventory)));
-        });
-        messageConsumer.Subscribe<ExternalPriceChangedEvent>("understand-eventsourcing-topic", "price-changed", async e =>
-        {
-            await host.ExecuteScoped<ChangePriceCommandHandler>(h => h.Handle(new ChangePriceCommand(e.ProductId, e.NewPrice, e.OldPrice)));
-        });
+        //var messageConsumer = host.Services.GetRequiredService<IMessageConsumer>();
+        //messageConsumer.Subscribe<ExternalInventoryChangedEvent>("understand-eventsourcing-topic", "inventory-changed", async e =>
+        //{
+        //    await host.ExecuteScoped<ChangeInventoryCommandHandler>(h => h.Handle(new ChangeInventoryCommand(e.ProductId, e.Inventory)));
+        //});
+        //messageConsumer.Subscribe<ExternalPriceChangedEvent>("understand-eventsourcing-topic", "price-changed", async e =>
+        //{
+        //    await host.ExecuteScoped<ChangePriceCommandHandler>(h => h.Handle(new ChangePriceCommand(e.ProductId, e.NewPrice, e.OldPrice)));
+        //});
     }
 
     public static void RegisterLoyaltyModuleEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapPost("/api/cart/items/add/v1", async ([FromServices] AddItemCommandHandler handler, [FromBody] AddItemCommand cmd) => await handler.Handle(cmd));
+        //app.MapPost("/api/cart/items/add/v1", async ([FromServices] AddItemCommandHandler handler, [FromBody] AddItemCommand cmd) => await handler.Handle(cmd));
 
         app.MapGet("/api/loyalty/support/get-aggregate-events/v1", async ([FromServices] IEventStore eventStore, [FromQuery] string aggregateId) => await eventStore.LoadEvents(aggregateId));
         app.MapGet("/api/loyalty/support/get-latest-events/v1", async ([FromServices] IEventStore eventStore, [FromQuery] int eventMaxCount) =>

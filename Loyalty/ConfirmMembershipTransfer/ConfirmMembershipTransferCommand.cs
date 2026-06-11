@@ -4,7 +4,7 @@ namespace UnderstandingEventsourcingExample.Loyalty.ConfirmMembershipTransfer;
 
 public record ConfirmMembershipTransferCommand(Guid OldMembershipId, Guid ConfirmationId);
 
-public class ConfirmMembershipTransferCommandHandler(MembershipRepository repository)
+internal class ConfirmMembershipTransferCommandHandler(MembershipRepository repository)
 {
     public async Task Handle(ConfirmMembershipTransferCommand command)
     {

@@ -4,7 +4,7 @@ namespace UnderstandingEventsourcingExample.Loyalty.RegisterMembership;
 
 public record RegisterMembershipCommand(string PhoneNumber);
 
-public class RegisterMembershipCommandHandler(MembershipRepository repository)
+internal class RegisterMembershipCommandHandler(MembershipRepository repository)
 {
     public async Task Handle(RegisterMembershipCommand command)
     {

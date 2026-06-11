@@ -9,9 +9,10 @@ internal class MembershipAggregate : Aggregate,
     IDomainEventHandler<MembershipTransferRequestedEvent>,
     IDomainEventHandler<MembershipTransferConfirmedEvent>
 {
-    public MemberInformation? Info { get; private set; }
+    public MemberInformation? UncommitedMemberInformation { get; private set; }
+    public Guid MemberInformationId { get; private set; }
 
-    private Guid _memberInformationId = Guid.Empty;
+    private MemberInformation? _memberInformation;
     private Guid _confirmationId = Guid.Empty;
     private bool _isConfirmed = false;
     private bool _isCanceled = false;
@@ -22,15 +23,34 @@ internal class MembershipAggregate : Aggregate,
 
     public MembershipAggregate(MembershipId id, string phoneNumber)
     {
-        Info = new MemberInformation(phoneNumber);
-        Apply(new MembershipRegisteredEvent(id.Value, Info.Id, Guid.NewGuid()));
+        UncommitedMemberInformation = new MemberInformation(phoneNumber);
+        Apply(new MembershipRegisteredEvent(id.Value, UncommitedMemberInformation.Id, Guid.NewGuid()));
+    }
+
+    public void SetMemberInformation(MemberInformation memberInformation)
+    {
+        if (_memberInformation != MemberInformation.Empty)
+        {
+            throw new LoyaltyException("Can only be called once, when aggregate is loaded");
+        }
+
+        _memberInformation = memberInformation;
+    }
+
+    public void UpdateMemberInformation(string name, string email)
+    {
+        if (_memberInformation != null)
+        {
+            _memberInformation.UpdateInfo(name, email);
+            UncommitedMemberInformation = _memberInformation;
+        }
     }
 
     public void Confirm(Guid confirmationId)
     {
         if (!_isConfirmed && !_isCanceled && _confirmationId == confirmationId)
         {
-            Apply(new MembershipConfirmedEvent(new Guid(Id), _memberInformationId));
+            Apply(new MembershipConfirmedEvent(new Guid(Id), MemberInformationId));
         }
     }
 
@@ -38,7 +58,7 @@ internal class MembershipAggregate : Aggregate,
     {
         if (!_isCanceled)
         {
-            Apply(new MembershipCanceledEvent(new Guid(Id), _memberInformationId));
+            Apply(new MembershipCanceledEvent(new Guid(Id), MemberInformationId));
         }
     }
 
@@ -46,8 +66,8 @@ internal class MembershipAggregate : Aggregate,
     {
         if (_isCanceled)
         {
-            Info = new MemberInformation(phoneNumber);
-            Apply(new MembershipRegisteredEvent(new Guid(Id), Info.Id, Guid.NewGuid()));
+            UncommitedMemberInformation = new MemberInformation(phoneNumber);
+            Apply(new MembershipRegisteredEvent(new Guid(Id), UncommitedMemberInformation.Id, Guid.NewGuid()));
         }
     }
 
@@ -55,8 +75,11 @@ internal class MembershipAggregate : Aggregate,
     {
         if (_isConfirmed)
         {
-            // TODO: how to store new phone number until actual transfer
-            Info.SetPhoneNumberToTransferTo(phoneNumber);
+            if (_memberInformation != null)
+            {
+                _memberInformation.SetPhoneNumberToTransferTo(phoneNumber);
+                UncommitedMemberInformation = _memberInformation;
+            }
             Apply(new MembershipTransferRequestedEvent(new Guid(Id), newMembershipId.Value, Guid.NewGuid()));
         }
     }
@@ -68,16 +91,20 @@ internal class MembershipAggregate : Aggregate,
             return null;
         }
 
-        // TODO: how to get new phone number
+        if (_memberInformation == null || string.IsNullOrEmpty(_memberInformation.TransferToPhoneNumber))
+        {
+            return null;
+        }
+
         Apply(new MembershipTransferConfirmedEvent(new Guid(Id), _newMembershipId, Guid.NewGuid()));
         Apply(new MembershipCanceledEvent(new Guid(Id), Guid.Empty));
-        return new MembershipAggregate(MembershipId.FromId(_newMembershipId), "");
+        return new MembershipAggregate(MembershipId.FromId(_newMembershipId), _memberInformation.TransferToPhoneNumber);
     }
 
     public void On(MembershipRegisteredEvent @event)
     {
         Id = @event.MembershipId.ToString();
-        _memberInformationId = @event.MemberInformationId;
+        MemberInformationId = @event.MemberInformationId;
         _confirmationId = @event.ConfirmationId;
     }
 

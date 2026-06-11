@@ -4,7 +4,7 @@ namespace UnderstandingEventsourcingExample.Loyalty.RequestMembershipTransfer;
 
 public record RequestMembershipTransferCommand(string OldPhoneNumber, string NewPhoneNumber);
 
-public class RequestMembershipTransferCommandHandler(MembershipRepository repository)
+internal class RequestMembershipTransferCommandHandler(MembershipRepository repository)
 {
     public async Task Handle(RequestMembershipTransferCommand command)
     {

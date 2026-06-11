@@ -3,7 +3,7 @@ using Basses.SimpleEventStore.EventStore;
 
 namespace UnderstandingEventsourcingExample.Loyalty.Domain;
 
-public class MembershipRepository : EventSourcedRepository<MembershipAggregate>
+internal class MembershipRepository : EventSourcedRepository<MembershipAggregate>
 {
     public MembershipRepository(IEventStore eventStore) : base(eventStore)
     {

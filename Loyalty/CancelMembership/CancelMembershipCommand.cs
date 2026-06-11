@@ -4,7 +4,7 @@ namespace UnderstandingEventsourcingExample.Loyalty.CancelMembership;
 
 public record CancelMembershipCommand(Guid MembershipId);
 
-public class CancelMembershipCommandHandler(MembershipRepository repository)
+internal class CancelMembershipCommandHandler(MembershipRepository repository)
 {
     public async Task Handle(CancelMembershipCommand command)
     {
