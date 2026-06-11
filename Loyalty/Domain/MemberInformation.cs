@@ -1,10 +1,7 @@
 ﻿namespace UnderstandingEventsourcingExample.Loyalty.Domain;
 
-internal class MemberInformation // TODO: make a value object
+internal class MemberInformation
 {
-    public static MemberInformation Empty = new MemberInformation { Id = Guid.Empty };
-
-    public Guid Id { get; private set; }
     public string? Name { get; private set; }
     public string? PhoneNumber { get; private set; }
     public string? Email { get; private set; }
@@ -16,18 +13,19 @@ internal class MemberInformation // TODO: make a value object
 
     public MemberInformation(string phoneNumber)
     {
-        Id = Guid.NewGuid();
         PhoneNumber = phoneNumber;
     }
 
-    public void UpdateInfo(string name, string email)
+    public MemberInformation WithNameAndEmail(string name, string email)
     {
         Name = name;
         Email = email;
+        return this;
     }
 
-    public void SetPhoneNumberToTransferTo(string phoneNumber)
+    public MemberInformation WithPhoneNumberToTransferTo(string phoneNumber)
     {
         TransferToPhoneNumber = phoneNumber;
+        return this;
     }
 }

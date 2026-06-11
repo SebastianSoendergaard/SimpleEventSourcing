@@ -7,6 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="C:\Users\ses\.nuget\packages\basses.simpledocumentstore.postgresql\1.0.0\contentFiles\any\net9.0\RELEASE_NOTES.txt" />
+    <Content Remove="C:\Users\ses\.nuget\packages\basses.simpledocumentstore.postgresql\1.0.0\contentFiles\any\net9.0\simple_document_store.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Basses.SimpleDocumentStore.PostgreSql" Version="1.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Basses.SimpleEventStore\Basses.SimpleEventStore.csproj" />
   </ItemGroup>
 

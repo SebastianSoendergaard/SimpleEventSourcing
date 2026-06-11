@@ -20,6 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Basses.SimpleEventStore.PostgreSql\Basses.SimpleEventStore.PostgreSql.csproj" />
     <ProjectReference Include="..\Basses.SimpleMessageBus\Basses.SimpleMessageBus.csproj" />
+    <ProjectReference Include="..\Framework\Framework.csproj" />
   </ItemGroup>
 
 </Project>

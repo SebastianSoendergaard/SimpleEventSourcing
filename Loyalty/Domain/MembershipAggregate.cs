@@ -1,18 +1,18 @@
 ﻿using Basses.SimpleEventStore.Enablers;
+using UnderstandingEventsourcingExample.Framework;
 
 namespace UnderstandingEventsourcingExample.Loyalty.Domain;
 
-internal class MembershipAggregate : Aggregate,
+internal class MembershipAggregate : PiiAggregate<MemberInformation>,
     IDomainEventHandler<MembershipRegisteredEvent>,
     IDomainEventHandler<MembershipConfirmedEvent>,
     IDomainEventHandler<MembershipCanceledEvent>,
     IDomainEventHandler<MembershipTransferRequestedEvent>,
     IDomainEventHandler<MembershipTransferConfirmedEvent>
 {
-    public MemberInformation? UncommitedMemberInformation { get; private set; }
-    public Guid MemberInformationId { get; private set; }
+    private Guid MemberInformationId => PiiDataId;
+    private MemberInformation? MemberInformation => PiiData;
 
-    private MemberInformation? _memberInformation;
     private Guid _confirmationId = Guid.Empty;
     private bool _isConfirmed = false;
     private bool _isCanceled = false;
@@ -23,27 +23,13 @@ internal class MembershipAggregate : Aggregate,
 
     public MembershipAggregate(MembershipId id, string phoneNumber)
     {
-        UncommitedMemberInformation = new MemberInformation(phoneNumber);
-        Apply(new MembershipRegisteredEvent(id.Value, UncommitedMemberInformation.Id, Guid.NewGuid()));
-    }
-
-    public void SetMemberInformation(MemberInformation memberInformation)
-    {
-        if (_memberInformation != MemberInformation.Empty)
-        {
-            throw new LoyaltyException("Can only be called once, when aggregate is loaded");
-        }
-
-        _memberInformation = memberInformation;
+        Apply(new MemberInformation(phoneNumber));
+        Apply(new MembershipRegisteredEvent(id.Value, Guid.NewGuid(), Guid.NewGuid()));
     }
 
     public void UpdateMemberInformation(string name, string email)
     {
-        if (_memberInformation != null)
-        {
-            _memberInformation.UpdateInfo(name, email);
-            UncommitedMemberInformation = _memberInformation;
-        }
+        Apply(MemberInformation?.WithNameAndEmail(name, email));
     }
 
     public void Confirm(Guid confirmationId)
@@ -58,6 +44,7 @@ internal class MembershipAggregate : Aggregate,
     {
         if (!_isCanceled)
         {
+            ApplyClearPiiData();
             Apply(new MembershipCanceledEvent(new Guid(Id), MemberInformationId));
         }
     }
@@ -66,8 +53,8 @@ internal class MembershipAggregate : Aggregate,
     {
         if (_isCanceled)
         {
-            UncommitedMemberInformation = new MemberInformation(phoneNumber);
-            Apply(new MembershipRegisteredEvent(new Guid(Id), UncommitedMemberInformation.Id, Guid.NewGuid()));
+            Apply(new MemberInformation(phoneNumber));
+            Apply(new MembershipRegisteredEvent(new Guid(Id), Guid.NewGuid(), Guid.NewGuid()));
         }
     }
 
@@ -75,11 +62,7 @@ internal class MembershipAggregate : Aggregate,
     {
         if (_isConfirmed)
         {
-            if (_memberInformation != null)
-            {
-                _memberInformation.SetPhoneNumberToTransferTo(phoneNumber);
-                UncommitedMemberInformation = _memberInformation;
-            }
+            Apply(MemberInformation?.WithPhoneNumberToTransferTo(phoneNumber));
             Apply(new MembershipTransferRequestedEvent(new Guid(Id), newMembershipId.Value, Guid.NewGuid()));
         }
     }
@@ -91,20 +74,21 @@ internal class MembershipAggregate : Aggregate,
             return null;
         }
 
-        if (_memberInformation == null || string.IsNullOrEmpty(_memberInformation.TransferToPhoneNumber))
+        if (string.IsNullOrEmpty(MemberInformation?.TransferToPhoneNumber))
         {
             return null;
         }
 
         Apply(new MembershipTransferConfirmedEvent(new Guid(Id), _newMembershipId, Guid.NewGuid()));
         Apply(new MembershipCanceledEvent(new Guid(Id), Guid.Empty));
-        return new MembershipAggregate(MembershipId.FromId(_newMembershipId), _memberInformation.TransferToPhoneNumber);
+
+        return new MembershipAggregate(MembershipId.FromId(_newMembershipId), MemberInformation.TransferToPhoneNumber);
     }
 
     public void On(MembershipRegisteredEvent @event)
     {
         Id = @event.MembershipId.ToString();
-        MemberInformationId = @event.MemberInformationId;
+        SetPiiDataId(@event.MemberInformationId);
         _confirmationId = @event.ConfirmationId;
     }
 
