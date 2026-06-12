@@ -23,4 +23,8 @@
     <ProjectReference Include="..\Framework\Framework.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="SendMembershipTransferNotification\" />
+  </ItemGroup>
+
 </Project>
