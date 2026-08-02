@@ -34,26 +34,26 @@ public class AddItemTests
         List<IDomainEvent> givenEvents = [];
 
         var command = new AddItemCommand(
-            cartId,
-            _fixture.Create<string>(),
-            _fixture.Create<string>(),
-            _fixture.Create<decimal>(),
-            _fixture.Create<decimal>(),
-            _fixture.Create<Guid>(),
-            _fixture.Create<Guid>()
+            CartId: cartId,
+            Description: _fixture.Create<string>(),
+            Image: _fixture.Create<string>(),
+            Price: _fixture.Create<decimal>(),
+            TotalPrice: _fixture.Create<decimal>(),
+            ItemId: _fixture.Create<Guid>(),
+            ProductId: _fixture.Create<Guid>()
         );
 
         List<IDomainEvent> expectedEvents =
         [
             new CartCreatedEvent(cartId),
             new ItemAddedEventV2(
-                command.CartId,
-                command.Description,
-                command.Image,
-                command.Price,
-                command.ItemId,
-                command.ProductId,
-                _fingerPrintCalculator.FingerPrint
+                CartId: command.CartId,
+                Description: command.Description,
+                Image: command.Image,
+                Price: command.Price,
+                ItemId: command.ItemId,
+                ProductId: command.ProductId,
+                DeviceFingerPrint: _fingerPrintCalculator.FingerPrint
             )
         ];
 
@@ -75,35 +75,35 @@ public class AddItemTests
         [
             new CartCreatedEvent(cartId),
             new ItemAddedEvent(
-                cartId,
-                _fixture.Create<string>(),
-                _fixture.Create<string>(),
-                _fixture.Create<decimal>(),
-                _fixture.Create<Guid>(),
-                _fixture.Create<Guid>()
+                CartId: cartId,
+                Description: _fixture.Create<string>(),
+                Image: _fixture.Create<string>(),
+                Price: _fixture.Create<decimal>(),
+                ItemId: _fixture.Create<Guid>(),
+                ProductId: _fixture.Create<Guid>()
             )
         ];
 
         var command = new AddItemCommand(
-            cartId,
-            _fixture.Create<string>(),
-            _fixture.Create<string>(),
-            _fixture.Create<decimal>(),
-            _fixture.Create<decimal>(),
-            _fixture.Create<Guid>(),
-            _fixture.Create<Guid>()
+            CartId: cartId,
+            Description: _fixture.Create<string>(),
+            Image: _fixture.Create<string>(),
+            Price: _fixture.Create<decimal>(),
+            TotalPrice: _fixture.Create<decimal>(),
+            ItemId: _fixture.Create<Guid>(),
+            ProductId: _fixture.Create<Guid>()
         );
 
         List<IDomainEvent> expectedEvents =
         [
             new ItemAddedEventV2(
-                command.CartId,
-                command.Description,
-                command.Image,
-                command.Price,
-                command.ItemId,
-                command.ProductId,
-                _fingerPrintCalculator.FingerPrint
+                CartId: command.CartId,
+                Description: command.Description,
+                Image: command.Image,
+                Price: command.Price,
+                ItemId: command.ItemId,
+                ProductId: command.ProductId,
+                DeviceFingerPrint: _fingerPrintCalculator.FingerPrint
             )
         ];
 
@@ -124,39 +124,39 @@ public class AddItemTests
         [
             new CartCreatedEvent(cartId),
             new ItemAddedEvent(
-                cartId,
-                _fixture.Create<string>(),
-                _fixture.Create<string>(),
-                _fixture.Create<decimal>(),
-                _fixture.Create<Guid>(),
-                _fixture.Create<Guid>()
+                CartId: cartId,
+                Description: _fixture.Create<string>(),
+                Image: _fixture.Create<string>(),
+                Price: _fixture.Create<decimal>(),
+                ItemId: _fixture.Create<Guid>(),
+                ProductId: _fixture.Create<Guid>()
             ),
             new ItemAddedEvent(
-                cartId,
-                _fixture.Create<string>(),
-                _fixture.Create<string>(),
-                _fixture.Create<decimal>(),
-                _fixture.Create<Guid>(),
-                _fixture.Create<Guid>()
+                CartId: cartId,
+                Description: _fixture.Create<string>(),
+                Image: _fixture.Create<string>(),
+                Price: _fixture.Create<decimal>(),
+                ItemId: _fixture.Create<Guid>(),
+                ProductId: _fixture.Create<Guid>()
             ),
             new ItemAddedEvent(
-                cartId,
-                _fixture.Create<string>(),
-                _fixture.Create<string>(),
-                _fixture.Create<decimal>(),
-                _fixture.Create<Guid>(),
-                _fixture.Create<Guid>()
+                CartId: cartId,
+                Description: _fixture.Create<string>(),
+                Image: _fixture.Create<string>(),
+                Price: _fixture.Create<decimal>(),
+                ItemId: _fixture.Create<Guid>(),
+                ProductId: _fixture.Create<Guid>()
             )
         ];
 
         var command = new AddItemCommand(
-            cartId,
-            _fixture.Create<string>(),
-            _fixture.Create<string>(),
-            _fixture.Create<decimal>(),
-            _fixture.Create<decimal>(),
-            _fixture.Create<Guid>(),
-            _fixture.Create<Guid>()
+            CartId: cartId,
+            Description: _fixture.Create<string>(),
+            Image: _fixture.Create<string>(),
+            Price: _fixture.Create<decimal>(),
+            TotalPrice: _fixture.Create<decimal>(),
+            ItemId: _fixture.Create<Guid>(),
+            ProductId: _fixture.Create<Guid>()
         );
 
         await CommandValidator

@@ -51,7 +51,7 @@ public sealed class GetCartsWithProductsProjectorRepository
             var carts = await _sqlHelper.QueryAsync(sql, parameters, reader =>
             {
                 var cartId = reader.GetGuid(0);
-                return new CartProduct(cartId, productId);
+                return new CartProduct(CartId: cartId, ProductId: productId);
             });
             return carts;
         }

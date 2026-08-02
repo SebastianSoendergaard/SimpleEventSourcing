@@ -36,22 +36,22 @@ public class SubmitCartTests
         [
             new CartCreatedEvent(cartId),
             new ItemAddedEventV2(
-                cartId,
-                _fixture.Create<string>(),
-                _fixture.Create<string>(),
-                price1,
-                _fixture.Create<Guid>(),
-                productId1,
-                _fixture.Create<Guid>().ToString()
+                CartId: cartId,
+                Description: _fixture.Create<string>(),
+                Image: _fixture.Create<string>(),
+                Price: price1,
+                ItemId: _fixture.Create<Guid>(),
+                ProductId: productId1,
+                DeviceFingerPrint: _fixture.Create<Guid>().ToString()
             ),
             new ItemAddedEventV2(
-                cartId,
-                _fixture.Create<string>(),
-                _fixture.Create<string>(),
-                price2,
-                _fixture.Create<Guid>(),
-                productId2,
-                _fixture.Create<Guid>().ToString()
+                CartId: cartId,
+                Description: _fixture.Create<string>(),
+                Image: _fixture.Create<string>(),
+                Price: price2,
+                ItemId: _fixture.Create<Guid>(),
+                ProductId: productId2,
+                DeviceFingerPrint: _fixture.Create<Guid>().ToString()
             )
         ];
 
@@ -60,12 +60,13 @@ public class SubmitCartTests
         List<IDomainEvent> expectedEvents =
         [
             new CartSubmittedEvent(
-                cartId,
+                CartId: cartId,
+                OrderedProducts:
                 [
-                    new OrderedProduct(productId1, price1),
-                    new OrderedProduct(productId2, price2)
+                    new OrderedProduct(ProductId: productId1, Price: price1),
+                    new OrderedProduct(ProductId: productId2, Price: price2)
                 ],
-                price1 + price2
+                TotalPrice: price1 + price2
             )
         ];
 
@@ -92,15 +93,15 @@ public class SubmitCartTests
         [
             new CartCreatedEvent(cartId),
             new ItemAddedEventV2(
-                cartId,
-                _fixture.Create<string>(),
-                _fixture.Create<string>(),
-                _fixture.Create<decimal>(),
-                _fixture.Create<Guid>(),
-                _fixture.Create<Guid>(),
-                _fixture.Create<Guid>().ToString()
+                CartId: cartId,
+                Description: _fixture.Create<string>(),
+                Image: _fixture.Create<string>(),
+                Price: _fixture.Create<decimal>(),
+                ItemId: _fixture.Create<Guid>(),
+                ProductId: _fixture.Create<Guid>(),
+                DeviceFingerPrint: _fixture.Create<Guid>().ToString()
             ),
-            new CartSubmittedEvent(cartId, [], _fixture.Create<decimal>())
+            new CartSubmittedEvent(CartId: cartId, OrderedProducts: [], TotalPrice: _fixture.Create<decimal>())
         ];
 
         var command = new SubmitCartCommand(cartId);
@@ -121,13 +122,13 @@ public class SubmitCartTests
         [
             new CartCreatedEvent(cartId),
             new ItemAddedEventV2(
-                cartId,
-                _fixture.Create<string>(),
-                _fixture.Create<string>(),
-                _fixture.Create<decimal>(),
-                _fixture.Create<Guid>(),
-                _fixture.Create<Guid>(),
-                _fixture.Create<Guid>().ToString()
+                CartId: cartId,
+                Description: _fixture.Create<string>(),
+                Image: _fixture.Create<string>(),
+                Price: _fixture.Create<decimal>(),
+                ItemId: _fixture.Create<Guid>(),
+                ProductId: _fixture.Create<Guid>(),
+                DeviceFingerPrint: _fixture.Create<Guid>().ToString()
             ),
             new CartClearedEvent(cartId)
         ];

@@ -34,23 +34,23 @@ public class RemoveItemTests
         [
             new CartCreatedEvent(cartId),
             new ItemAddedEvent(
-                cartId,
-                _fixture.Create<string>(),
-                _fixture.Create<string>(),
-                _fixture.Create<decimal>(),
-                itemId,
-                _fixture.Create<Guid>()
+                CartId: cartId,
+                Description: _fixture.Create<string>(),
+                Image: _fixture.Create<string>(),
+                Price: _fixture.Create<decimal>(),
+                ItemId: itemId,
+                ProductId: _fixture.Create<Guid>()
             )
         ];
 
         var command = new RemoveItemCommand(
-            cartId,
-            itemId
+            CartId: cartId,
+            ItemId: itemId
         );
 
         List<IDomainEvent> expectedEvents =
         [
-            new ItemRemovedEvent(cartId, itemId)
+            new ItemRemovedEvent(CartId: cartId, ItemId: itemId)
         ];
 
         await CommandValidator
@@ -71,19 +71,19 @@ public class RemoveItemTests
         [
             new CartCreatedEvent(cartId),
             new ItemAddedEvent(
-                cartId,
-                _fixture.Create<string>(),
-                _fixture.Create<string>(),
-                _fixture.Create<decimal>(),
-                itemId,
-                _fixture.Create<Guid>()
+                CartId: cartId,
+                Description: _fixture.Create<string>(),
+                Image: _fixture.Create<string>(),
+                Price: _fixture.Create<decimal>(),
+                ItemId: itemId,
+                ProductId: _fixture.Create<Guid>()
             ),
-            new ItemRemovedEvent(cartId, itemId)
+            new ItemRemovedEvent(CartId: cartId, ItemId: itemId)
         ];
 
         var command = new RemoveItemCommand(
-            cartId,
-            itemId
+            CartId: cartId,
+            ItemId: itemId
         );
 
         await CommandValidator

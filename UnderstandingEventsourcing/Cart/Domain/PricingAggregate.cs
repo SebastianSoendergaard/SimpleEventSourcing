@@ -9,13 +9,13 @@ public class PricingAggregate : Aggregate,
 
     public PricingAggregate(Guid productId, decimal newPrice, decimal oldPrice)
     {
-        Apply(new PriceChangedEvent(productId, newPrice, oldPrice));
+        Apply(new PriceChangedEvent(ProductId: productId, NewPrice: newPrice, OldPrice: oldPrice));
     }
 
     public void Update(decimal newPrice, decimal oldPrice)
     {
         var id = CreateGuidFromPricingId(Id);
-        Apply(new PriceChangedEvent(id, newPrice, oldPrice));
+        Apply(new PriceChangedEvent(ProductId: id, NewPrice: newPrice, OldPrice: oldPrice));
     }
 
     public void On(PriceChangedEvent @event)

@@ -13,7 +13,7 @@ public class ArchiveItemAutomationReactor(GetCartsWithProductsQueryHandler query
 
         foreach (var cart in readModel.CartsWithProducts)
         {
-            var cmd = new ArchiveItemCommand(cart.CartId, cart.ProductId);
+            var cmd = new ArchiveItemCommand(CartId: cart.CartId, ProductId: cart.ProductId);
 
             await commandHandler.Handle(cmd);
         }

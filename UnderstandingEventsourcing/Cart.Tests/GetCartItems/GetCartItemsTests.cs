@@ -31,20 +31,20 @@ public class GetCartItemsTests
         [
             new CartCreatedEvent(cartId),
             new ItemAddedEvent(
-                cartId,
-                _fixture.Create<string>(),
-                _fixture.Create<string>(),
-                _fixture.Create<decimal>(),
-                _fixture.Create<Guid>(),
-                _fixture.Create<Guid>()
+                CartId: cartId,
+                Description: _fixture.Create<string>(),
+                Image: _fixture.Create<string>(),
+                Price: _fixture.Create<decimal>(),
+                ItemId: _fixture.Create<Guid>(),
+                ProductId: _fixture.Create<Guid>()
             ),
             new ItemAddedEvent(
-                cartId,
-                _fixture.Create<string>(),
-                _fixture.Create<string>(),
-                _fixture.Create<decimal>(),
-                _fixture.Create<Guid>(),
-                _fixture.Create<Guid>()
+                CartId: cartId,
+                Description: _fixture.Create<string>(),
+                Image: _fixture.Create<string>(),
+                Price: _fixture.Create<decimal>(),
+                ItemId: _fixture.Create<Guid>(),
+                ProductId: _fixture.Create<Guid>()
             )
         ];
 

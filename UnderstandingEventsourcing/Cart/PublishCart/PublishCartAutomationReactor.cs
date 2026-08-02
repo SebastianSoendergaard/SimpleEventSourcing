@@ -9,9 +9,9 @@ public class PublishCartAutomationReactor(PublishCartCommandHandler handler) : R
     public Task ReactOn(CartSubmittedEvent @event, EventData eventData)
     {
         var cmd = new PublishCartCommand(
-            @event.CartId,
-            @event.OrderedProducts.Select(x => new PublishCartCommand.OrderedProduct(x.ProductId, x.Price)).ToArray(),
-            @event.TotalPrice
+            CartId: @event.CartId,
+            OrderedProducts: @event.OrderedProducts.Select(x => new PublishCartCommand.OrderedProduct(ProductId: x.ProductId, Price: x.Price)).ToArray(),
+            TotalPrice: @event.TotalPrice
         );
 
         return handler.Handle(cmd);

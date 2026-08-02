@@ -31,11 +31,11 @@ public class ChangeInventoryTests
 
         List<IDomainEvent> givenEvents = [];
 
-        var command = new ChangeInventoryCommand(productId, inventory);
+        var command = new ChangeInventoryCommand(ProductId: productId, Inventory: inventory);
 
         List<IDomainEvent> expectedEvents =
         [
-            new InventoryChangedEvent(productId, inventory)
+            new InventoryChangedEvent(ProductId: productId, Inventory: inventory)
         ];
 
         await CommandValidator

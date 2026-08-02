@@ -23,9 +23,9 @@ public class PublishCartCommandHandler(CartRepository repository, IMessageProduc
         }
 
         var externalEvent = new ExternalPublishedCartEvent(
-            command.CartId,
-            command.OrderedProducts.Select(p => new ExternalPublishedCartEvent.OrderedProduct(p.ProductId, p.Price)).ToArray(),
-            command.TotalPrice
+            CartId: command.CartId,
+            OrderedProducts: command.OrderedProducts.Select(p => new ExternalPublishedCartEvent.OrderedProduct(ProductId: p.ProductId, Price: p.Price)).ToArray(),
+            TotalPrice: command.TotalPrice
         );
 
         var result = await messageProducer.SendMessage("understand-eventsourcing-topic", "cart-published", externalEvent);

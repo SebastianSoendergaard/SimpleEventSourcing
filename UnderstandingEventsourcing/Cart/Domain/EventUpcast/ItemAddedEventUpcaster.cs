@@ -18,13 +18,13 @@ public class ItemAddedEventUpcaster : IUpcaster
         {
             var e = (ItemAddedEvent)serializer.Deserialize(eventJson, eventType);
             return new ItemAddedEventV2(
-                e.CartId,
-                e.Description,
-                e.Image,
-                e.Price,
-                e.ItemId,
-                e.ProductId,
-                defaultDeviceFingerPrint
+                CartId: e.CartId,
+                Description: e.Description,
+                Image: e.Image,
+                Price: e.Price,
+                ItemId: e.ItemId,
+                ProductId: e.ProductId,
+                DeviceFingerPrint: defaultDeviceFingerPrint
             );
         }
 

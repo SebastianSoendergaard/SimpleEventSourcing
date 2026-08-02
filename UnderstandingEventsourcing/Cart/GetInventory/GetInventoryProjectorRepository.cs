@@ -48,7 +48,7 @@ public sealed class GetInventoryProjectorRepository
         try
         {
             var inventory = await _sqlHelper.QuerySingleOrDefaultAsync(sql, parameters, reader => reader.GetInt32(0));
-            return new InventoryReadModel(productId, inventory);
+            return new InventoryReadModel(ProductId: productId, Inventory: inventory);
         }
         catch (Exception ex)
         {

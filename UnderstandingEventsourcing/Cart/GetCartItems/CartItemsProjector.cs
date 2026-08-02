@@ -16,7 +16,7 @@ public class CartItemsProjector : Projector,
 
     public CartItemsReadModel? GetReadModel()
     {
-        return _cartId == null ? null : new CartItemsReadModel(_cartId.Value, _totalPrice, _items);
+        return _cartId == null ? null : new CartItemsReadModel(CartId: _cartId.Value, TotalPrice: _totalPrice, Items: _items);
     }
 
     public Task UpdateWith(CartCreatedEvent @event, EventData eventData)
@@ -28,12 +28,12 @@ public class CartItemsProjector : Projector,
     public Task UpdateWith(ItemAddedEventV2 @event, EventData eventData)
     {
         var item = new CartItem(
-            @event.CartId,
-            @event.Description,
-            @event.Image,
-            @event.Price,
-            @event.ItemId,
-            @event.ProductId
+            CartId: @event.CartId,
+            Description: @event.Description,
+            Image: @event.Image,
+            Price: @event.Price,
+            ItemId: @event.ItemId,
+            ProductId: @event.ProductId
         );
         _items.Add(item);
         _totalPrice += @event.Price;

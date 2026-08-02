@@ -38,7 +38,7 @@ public class GetInventoryProjector : Projector,
 
     public Task UpdateWith(InventoryChangedEvent @event, EventData eventData)
     {
-        _inventories.Add(new InventoryReadModel(@event.ProductId, @event.Inventory));
+        _inventories.Add(new InventoryReadModel(ProductId: @event.ProductId, Inventory: @event.Inventory));
         return Task.CompletedTask;
     }
 }

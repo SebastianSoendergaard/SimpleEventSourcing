@@ -9,13 +9,13 @@ public class InventoryAggregate : Aggregate,
 
     public InventoryAggregate(Guid productId, int inventory)
     {
-        Apply(new InventoryChangedEvent(productId, inventory));
+        Apply(new InventoryChangedEvent(ProductId: productId, Inventory: inventory));
     }
 
     public void Update(int inventory)
     {
         var id = CreateGuidFromInventoryId(Id);
-        Apply(new InventoryChangedEvent(id, inventory));
+        Apply(new InventoryChangedEvent(ProductId: id, Inventory: inventory));
     }
 
     public void On(InventoryChangedEvent @event)

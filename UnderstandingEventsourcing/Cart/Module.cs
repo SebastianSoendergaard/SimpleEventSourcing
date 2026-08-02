@@ -92,11 +92,11 @@ public static class Module
         var messageConsumer = host.Services.GetRequiredService<IMessageConsumer>();
         messageConsumer.Subscribe<ExternalInventoryChangedEvent>("understand-eventsourcing-topic", "inventory-changed", async e =>
         {
-            await host.ExecuteScoped<ChangeInventoryCommandHandler>(h => h.Handle(new ChangeInventoryCommand(e.ProductId, e.Inventory)));
+            await host.ExecuteScoped<ChangeInventoryCommandHandler>(h => h.Handle(new ChangeInventoryCommand(ProductId: e.ProductId, Inventory: e.Inventory)));
         });
         messageConsumer.Subscribe<ExternalPriceChangedEvent>("understand-eventsourcing-topic", "price-changed", async e =>
         {
-            await host.ExecuteScoped<ChangePriceCommandHandler>(h => h.Handle(new ChangePriceCommand(e.ProductId, e.NewPrice, e.OldPrice)));
+            await host.ExecuteScoped<ChangePriceCommandHandler>(h => h.Handle(new ChangePriceCommand(ProductId: e.ProductId, NewPrice: e.NewPrice, OldPrice: e.OldPrice)));
         });
     }
 

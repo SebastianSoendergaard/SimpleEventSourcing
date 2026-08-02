@@ -33,13 +33,13 @@ public class CartAggregate : Aggregate,
         }
 
         Apply(new ItemAddedEventV2(
-            new Guid(Id),
-            description,
-            image,
-            price,
-            itemId,
-            productId,
-            fingerPrintCalculator.GetFingerPrint()
+            CartId: new Guid(Id),
+            Description: description,
+            Image: image,
+            Price: price,
+            ItemId: itemId,
+            ProductId: productId,
+            DeviceFingerPrint: fingerPrintCalculator.GetFingerPrint()
         ));
     }
 
@@ -50,7 +50,7 @@ public class CartAggregate : Aggregate,
             throw new CartException($"Item {itemId} not in the Cart");
         }
 
-        Apply(new ItemRemovedEvent(new Guid(Id), itemId));
+        Apply(new ItemRemovedEvent(CartId: new Guid(Id), ItemId: itemId));
     }
 
     public void ArchiveItem(Guid productId)
@@ -59,7 +59,7 @@ public class CartAggregate : Aggregate,
         {
             if (kv.Value == productId)
             {
-                Apply(new ItemArchivedEvent(new Guid(Id), kv.Key));
+                Apply(new ItemArchivedEvent(CartId: new Guid(Id), ItemId: kv.Key));
             }
         }
     }
@@ -81,9 +81,9 @@ public class CartAggregate : Aggregate,
             throw new CartException($"Can not submit cart twice");
         }
 
-        var orderedProducts = _items.Select(x => new OrderedProduct(x.Value, _productPrices[x.Value])).ToArray();
+        var orderedProducts = _items.Select(x => new OrderedProduct(ProductId: x.Value, Price: _productPrices[x.Value])).ToArray();
 
-        Apply(new CartSubmittedEvent(new Guid(Id), orderedProducts, orderedProducts.Sum(x => x.Price)));
+        Apply(new CartSubmittedEvent(CartId: new Guid(Id), OrderedProducts: orderedProducts, TotalPrice: orderedProducts.Sum(x => x.Price)));
     }
 
     public void Publish()
