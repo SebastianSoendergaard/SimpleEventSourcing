@@ -15,14 +15,14 @@ public abstract class EventSourcedRepository<T> where T : Aggregate
     {
         var events = aggregate.UncommitedDomainEvents;
         await _eventStore.AppendEvents(aggregate.Id, aggregate.Version + 1, events);
-        aggregate.ClearDomainEvents();
+        aggregate.MarkDomainEventsAsCommited();
     }
 
     public async Task Update(T aggregate)
     {
         var events = aggregate.UncommitedDomainEvents;
         await _eventStore.AppendEvents(aggregate.Id, aggregate.Version + 1, events);
-        aggregate.ClearDomainEvents();
+        aggregate.MarkDomainEventsAsCommited();
     }
 
     public async Task<T?> TryGet(string aggregateId)

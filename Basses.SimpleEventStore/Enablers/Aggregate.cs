@@ -20,8 +20,9 @@ public abstract class Aggregate
         }
     }
 
-    public void ClearDomainEvents()
+    public void MarkDomainEventsAsCommited()
     {
+        // Commit has been confirmed, aggregate now officially has a new version
         Version += _uncommitedDomainEvents.Count;
         _uncommitedDomainEvents.Clear();
     }
