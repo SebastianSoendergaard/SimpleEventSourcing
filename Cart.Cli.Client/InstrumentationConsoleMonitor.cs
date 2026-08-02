@@ -2,41 +2,24 @@
 
 namespace Cart.Cli.Client;
 
-internal static class InstrumentationMonitor
+internal static class InstrumentationConsoleMonitor
 {
     public static async Task Run()
     {
-        Console.Write("Type log file path: ");
-        var input = Console.ReadLine();
-        if (string.IsNullOrWhiteSpace(input))
-        {
-            Console.WriteLine("Invalid file path!");
-            return;
-        }
-
-        var dir = Path.GetDirectoryName(input);
-        if (!string.IsNullOrEmpty(dir))
-        {
-            Directory.CreateDirectory(dir);
-        }
-
-        Console.WriteLine($"Logging all instrumentation actions to: {input}");
+        Console.WriteLine($"Logging all instrumentation actions");
         Console.WriteLine("");
         Console.WriteLine("");
-
-        var headline = "StartTime;ProcessingTime (ms);Type;ItemCount";
-        File.WriteAllLines(input, [headline]);
 
         while (!Console.KeyAvailable)
         {
-            await LogInstrumentationActions(input ?? "");
+            await LogInstrumentationActions();
             await Task.Delay(1000);
         }
     }
 
-    static async Task LogInstrumentationActions(string filePath)
+    static async Task LogInstrumentationActions()
     {
-        Console.Write($"Reading actions... ");
+        Console.WriteLine($"Reading actions... ");
         using var client = new HttpClient();
         var url = $"https://localhost:7165/api/support/get-instumentation-actions/v1";
         var result = await client.GetAsync(url);
@@ -48,7 +31,10 @@ internal static class InstrumentationMonitor
         }
         var actions = JsonSerializer.Deserialize<List<Action>>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         var lines = actions?.Select(x => x.ToLogLine()) ?? [];
-        File.AppendAllLines(filePath, lines);
+        foreach (var line in lines)
+        {
+            Console.WriteLine(line);
+        }
         Console.WriteLine($"OK - logged {lines.Count()} actions.");
     }
 
@@ -56,7 +42,12 @@ internal static class InstrumentationMonitor
     {
         public string ToLogLine()
         {
-            return $"{StartTime:O};{ProcessingTime.TotalMilliseconds};{Type};{GetItemCount()}";
+            var startTime = $"StartTime: {StartTime:O}".PadRight(45);
+            var processingTime = $"ProcessingTime(ms): { ProcessingTime.TotalMilliseconds}".PadRight(30);
+            var type = $"Type: {Type}".PadRight(40);
+            var itemCount = $"ItemCount: {GetItemCount()}".PadRight(15);
+
+            return $"{startTime} {processingTime} {type} {itemCount}";
         }
 
         private int GetItemCount()

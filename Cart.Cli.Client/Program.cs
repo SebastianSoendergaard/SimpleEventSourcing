@@ -3,7 +3,8 @@
 Console.WriteLine("Enter program to execute, valid options:");
 Console.WriteLine("  1: client");
 Console.WriteLine("  2: monitor");
-Console.WriteLine("  3: instrumentation");
+Console.WriteLine("  3: instrumentation to console");
+Console.WriteLine("  4: instrumentation to file");
 var input = Console.ReadKey();
 Console.WriteLine("");
 Console.WriteLine("");
@@ -19,7 +20,11 @@ switch (input.KeyChar)
         break;
 
     case '3':
-        InstrumentationMonitor.Run().GetAwaiter().GetResult();
+        InstrumentationConsoleMonitor.Run().GetAwaiter().GetResult();
+        break;
+
+    case '4':
+        InstrumentationFileMonitor.Run().GetAwaiter().GetResult();
         break;
 
     default:

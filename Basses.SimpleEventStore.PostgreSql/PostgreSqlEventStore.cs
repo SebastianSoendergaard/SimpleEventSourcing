@@ -67,7 +67,7 @@ public class PostgreSqlEventStore : IEventStore
         }
         finally
         {
-            _instrumentation.CompletedAction("AppendEvents", instrumentationId, new { streamId, version, eventCount = events.Count() });
+            _instrumentation.CompletedAction("append-events", instrumentationId, new { streamId, version, eventCount = events.Count() });
         }
 
         if (_onEventsAppended != null)
@@ -178,7 +178,7 @@ public class PostgreSqlEventStore : IEventStore
         }
         finally
         {
-            _instrumentation.CompletedAction("LoadEvents", instrumentationId, new { parameters, eventCount });
+            _instrumentation.CompletedAction("load-events", instrumentationId, new { parameters, eventCount });
         }
     }
     private void CreateEventStoreTableIfNotExists()
