@@ -23,13 +23,15 @@ internal class MembershipAggregate : PiiAggregate<MemberInformation>,
 
     public MembershipAggregate(MembershipId id, string phoneNumber)
     {
-        Apply(new MemberInformation(phoneNumber));
+        UpdatePiiData(new MemberInformation(phoneNumber));
         Apply(new MembershipRegisteredEvent(id.Value, Guid.NewGuid(), Guid.NewGuid()));
     }
 
     public void UpdateMemberInformation(string name, string email)
     {
-        Apply(MemberInformation?.WithNameAndEmail(name, email));
+        UpdatePiiData(MemberInformation?.WithNameAndEmail(name, email));
+        Apply(new MemberNameUpdatedEvent(new Guid(Id), MemberInformationId));
+        Apply(new MemberEmailUpdatedEvent(new Guid(Id), MemberInformationId));
     }
 
     public void Confirm(Guid confirmationId)
@@ -44,7 +46,7 @@ internal class MembershipAggregate : PiiAggregate<MemberInformation>,
     {
         if (!_isCanceled)
         {
-            ApplyClearPiiData();
+            ClearPiiData();
             Apply(new MembershipCanceledEvent(new Guid(Id), MemberInformationId));
         }
     }
@@ -53,7 +55,7 @@ internal class MembershipAggregate : PiiAggregate<MemberInformation>,
     {
         if (_isCanceled)
         {
-            Apply(new MemberInformation(phoneNumber));
+            UpdatePiiData(new MemberInformation(phoneNumber));
             Apply(new MembershipRegisteredEvent(new Guid(Id), Guid.NewGuid(), Guid.NewGuid()));
         }
     }
@@ -62,7 +64,7 @@ internal class MembershipAggregate : PiiAggregate<MemberInformation>,
     {
         if (_isConfirmed)
         {
-            Apply(MemberInformation?.WithPhoneNumberToTransferTo(phoneNumber));
+            UpdatePiiData(MemberInformation?.WithPhoneNumberToTransferTo(phoneNumber));
             Apply(new MembershipTransferRequestedEvent(new Guid(Id), newMembershipId.Value, Guid.NewGuid()));
         }
     }
@@ -79,8 +81,8 @@ internal class MembershipAggregate : PiiAggregate<MemberInformation>,
             return null;
         }
 
-        Apply(new MembershipTransferConfirmedEvent(new Guid(Id), _newMembershipId, Guid.NewGuid()));
-        Apply(new MembershipCanceledEvent(new Guid(Id), Guid.Empty));
+        Apply(new MembershipTransferConfirmedEvent(new Guid(Id), _newMembershipId, confirmationId));
+        Apply(new MembershipCanceledEvent(new Guid(Id), MemberInformationId)); // not sure we should cancel here!
 
         return new MembershipAggregate(MembershipId.FromId(_newMembershipId), MemberInformation.TransferToPhoneNumber);
     }
@@ -111,6 +113,6 @@ internal class MembershipAggregate : PiiAggregate<MemberInformation>,
 
     public void On(MembershipTransferConfirmedEvent @event)
     {
-
+        _isConfirmed = true;
     }
 }

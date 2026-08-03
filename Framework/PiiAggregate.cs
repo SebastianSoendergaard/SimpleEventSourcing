@@ -27,7 +27,7 @@ public abstract class PiiAggregate<TPiiData> : Aggregate
         PiiDataId = id;
     }
 
-    protected void Apply(TPiiData? data)
+    protected void UpdatePiiData(TPiiData? data)
     {
         UncommitedPiiData = new PiiDataWrapper<TPiiData>
         {
@@ -37,7 +37,7 @@ public abstract class PiiAggregate<TPiiData> : Aggregate
         PiiData = data;
     }
 
-    protected void ApplyClearPiiData()
+    protected void ClearPiiData()
     {
         UncommitedPiiData = new PiiDataWrapper<TPiiData>
         {

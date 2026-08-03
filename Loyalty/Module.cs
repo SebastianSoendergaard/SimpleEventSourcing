@@ -22,7 +22,7 @@ public static class Module
         var schema = configuration.GetValue<string>("Loyalty:EventStore:Schema") ?? "";
         var eventStoreName = configuration.GetValue<string>("Loyalty:EventStore:EventStoreName") ?? "";
         var projectorStateStoreName = configuration.GetValue<string>("Loyalty:EventStore:ProjectorStateStoreName") ?? "";
-        var reactorStateStoreName = configuration.GetValue<string>("CaLoyaltyrt:EventStore:ReactorStateStoreName") ?? "";
+        var reactorStateStoreName = configuration.GetValue<string>("Loyalty:EventStore:ReactorStateStoreName") ?? "";
 
         var kafkaServer = configuration.GetValue<string>("Loyalty:Kafka:Server") ?? "";
         var kafkaClientId = configuration.GetValue<string>("Loyalty:Kafka:ClientId") ?? "";

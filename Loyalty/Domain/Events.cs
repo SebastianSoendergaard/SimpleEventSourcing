@@ -8,6 +8,16 @@ public record MembershipRegisteredEvent(
     Guid ConfirmationId
 ) : IDomainEvent;
 
+public record MemberNameUpdatedEvent(
+    Guid MembershipId,
+    Guid MemberInformationId
+) : IDomainEvent;
+
+public record MemberEmailUpdatedEvent(
+    Guid MembershipId,
+    Guid MemberInformationId
+) : IDomainEvent;
+
 public record MembershipConfirmedEvent(
     Guid MembershipId,
     Guid MemberInformationId
